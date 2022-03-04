@@ -4,9 +4,13 @@ Our group project for BIOL 432
 Our team name is Soil Mates
 
 Team members:
+
 Lauryn Joslin
+
 Nadejda Boev
+
 Logan Wisteard
+
 Joel Sagman
 
 Our dataset:
