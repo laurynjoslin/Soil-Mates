@@ -1,0 +1,5 @@
+"0","Dat$Ar10 <- Dat$Ar10 %>% # Fixes capitalization"
+"0","  rename(Phyla=(phylum),"
+"0","         Class=(class),"
+"0","         Order=(order),"
+"0","         Family=(family))"
