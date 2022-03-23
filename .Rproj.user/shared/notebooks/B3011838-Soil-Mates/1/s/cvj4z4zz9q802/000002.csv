@@ -1,3 +1,0 @@
-"0","En<-bind_rows(Dat$En10,Dat$En20) #Combines Enviro tables into one dataset"
-"0","D10<-bind_rows(Dat$Ar10,Dat$Ba10,Dat$Fu10) # Combines all for at depth 10 "
-"0","D20<-bind_rows(Dat$Ar20,Dat$Ba20,Dat$Fu20) # Combines all microbes for for depth of 20"
