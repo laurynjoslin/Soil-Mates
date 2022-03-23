@@ -1,0 +1,42 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+## Background
+- a little about destructive forces/ soil health --> I can write this later
+
+
+
+### Preprocessing
+
+Loading in packages 
+
+```{r}
+library(dplyr)
+library(tibble)
+library(ggplot2)
+library(ape)
+library(ggtree)
+library(vegan)
+library(cowplot)
+library(tidyverse)
+```
+
+Loading in bacteria OTU 
+
+```{r}
+
+```
+
+
+
+
+### Question 1: Are destructive forces associated with decreasing microbial diversity
+
+```{r}
+plot(cars)
+```
+
+
