@@ -1,0 +1,2 @@
+"0","Dat$Fu10 <- Dat$Fu10 %>% #Removes extras from Fungi"
+"0","  select(-Trophic.Mode,-Guild,-Confidence.Ranking)"

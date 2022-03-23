@@ -1,0 +1,4 @@
+"0","Dat$En10 <- Dat$En10 %>% # Possibly unnecessary"
+"0","  rename(Archaea=(Archaea_010cm),"
+"0","         Bacteria=(Bacteria_010cm),"
+"0","         Fungi=(Fungi_010cm))"
