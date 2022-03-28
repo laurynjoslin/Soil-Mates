@@ -45,8 +45,16 @@ summary(en)
 #No.Fires - number of fires either 1, 2, 3 or 4
 #Clearcut- is it clearcut yes = 1, no = 0
 #Salvage - was it salvage logged - yes = 1, no = 0
+#TSD is time since disturbance
 
+```
 
+```{r}
+#chemical info
+
+#colwell is a way of measuring availibility of that element
+#DTPA is Diethylenetriaminepentaacetic acid which extracts trace elements
+#
 ```
 
 
@@ -59,18 +67,20 @@ en$no_fires <- as.character(en$No.Fires)
 en$clearcut <- as.character(en$Clearcut)
 ```
 
-
+#Exploratory boxplots
 
 ```{r}
 ggplot(en)+
   geom_boxplot(aes(x = no_fires, y = log10(Ammonium.Nitrogen), fill = clearcut))
 ```
 ```{r}
+#No difference
 ggplot(en)+
   geom_boxplot(aes(x = no_fires, y = Organic.Carbon, fill = clearcut))
 ```
 
 ```{r}
+#No fires has higher nitrogen in nitrate form compared to all number of fires greater than 2
 ggplot(en)+
   geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen, fill = clearcut))
 ```
@@ -81,6 +91,7 @@ ggplot(en)+
 ```
 
 ```{r}
+#three fires more potassium 
 ggplot(en)+
   geom_boxplot(aes(x = no_fires, y = Potassium.Colwell,fill = clearcut))
 ```
@@ -91,6 +102,7 @@ ggplot(en)+
 ```
 
 ```{r}
+#lower iron 3 fires? 
 ggplot(en)+
   geom_boxplot(aes(x = no_fires, y = log10(DTPA.Iron), fill = clearcut))
 ```
@@ -100,9 +112,38 @@ ggplot(en)+
   geom_boxplot(aes(x = no_fires, y = log10(DTPA.Manganese), fill = clearcut))
 ```
 ```{r}
+#higher magnesium with increasing number of fires 
 ggplot(en)+
   geom_boxplot(aes(x = no_fires, y = log10(Exc.Magnesium), fill = clearcut))
 ```
 
+#cleaner graphs
 
+```{r}
+clearcutpal <- c("#7f4f24", "#718355")
+```
+
+```{r}
+theme_boxplot_one <- function (base_size =12, base_family = ""){
+  theme_classic(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      axis.text = element_text(colour = "black"),
+      axis.title.x = element_text(size=12),
+      axis.text.x = element_text(size=9),
+      axis.title.y = element_text(size=12, angle=90),
+      axis.text.y = element_text(size=9),
+      axis.ticks = element_blank(),
+      panel.background = element_rect(fill = "white"),
+      panel.border = element_blank(),
+      plot.title= element_text(face="bold", size=24)
+    )
+}
+```
+
+```{r}
+ggplot(en)+
+  geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen, fill = clearcut))+
+  scale_fill_manual(labels = c('no','yes'), values = clearcutpal)+
+  theme_boxplot_one()
+```
 
