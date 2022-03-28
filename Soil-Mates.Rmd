@@ -18,7 +18,7 @@ for (i in seq_along(temp)) { # creates a list (I dont know if this is the right 
     file = temp[[i]]
   )
 }
-names <- c("En10", "En20", "Ar10", "Ba10", "Fu10", "Ar20", "Ba20", "Fu20") #probably a better way to name the elements in Dat - increase reproducibility
+names <- c("En10", "En20", "Ar10", "Ba10", "Fu10", "Ar20", "Ba20", "Fu20", "En") #probably a better way to name the elements in Dat - increase reproducibility
 Dat <- set_names(Dat, names) # sets the names for the data frames in Dat
 ```
 #### Preprocessing before data is combined
@@ -47,6 +47,7 @@ Dat$En10 <- Dat$En10 %>% # Possibly unnecessary
          Bacteria=(Bacteria_010cm),
          Fungi=(Fungi_010cm))
 ```
+
 ```{r}
 Dat$En20 <- Dat$En20 %>% # Makes so that when both Enviro tables are combined names match
   rename(Clearcut=(CLF),
@@ -56,7 +57,10 @@ Dat$En20 <- Dat$En20 %>% # Makes so that when both Enviro tables are combined na
          pH.CaCl2.=(pH.Level..CaCl2.),
          Archaea=(Archaea_020cm),
          Bacteria=(Bacteria_020cm),
-         Fungi=(Fungi_020cm))
+         Fungi=(Fungi_020cm)) #%>%
+  ## replace(TSD, -1)
+
+
 ```
 #### Combines datasets - reproducibility likely can be enhanced - this one uses the Importing all at once
 ```{r}
@@ -70,22 +74,55 @@ D20<-bind_rows(Dat$Ar20,Dat$Ba20,Dat$Fu20) # Combines all microbes for for depth
 write.csv(En, file = "./Data/En.csv")
 ```
 
-
-
-#### fix sample id so they consistent between Enviro table, Depth10, and Depth20
-### contamination?
+#### Please ignore - this belongs in question 1
+#### Diversity
 ```{r}
 tD10 <- D10
-tD10 <- t(tD10)
 
 tD10 <- tD10 %>%
-  
-(tD10[1:3,1:3])
+  select(-Cluster, -Sample, -Phyla, -Class, -Order, -Family)
+
+tD10 <- t(tD10)
 ```
 
+```{r}
+Div1 <- diversity(tD10, index = "shannon", MARGIN = 1, base= exp(1))
+```
 
+```{r}
+tD20 <- D20
+tD20 <- tD20 %>%
+  select(-Cluster, -Sample, -Phyla, -Class, -Order, -Family)
+tD20 <- t(tD20)
+```
 
+```{r}
+Div2 <- diversity(tD20, index = "shannon", MARGIN = 1, base= exp(1))
+```
 
+```{r}
+EnQ1 <- En
+```
 
+```{r}
+EnQ1$Div <- c(Div, Div2)
+```
 
+```{r}
+qplot(x=EnQ1$No.Fires, y=EnQ1$Div)
+```
+
+```{r}
+qplot(No.Fires, Microbial_diversity, data=EnQ1) 
+```
+
+#### Doesn't work 
+```{r}
+EnM <- En
+EnM <- EnM %>%
+  select(No.Fires, Clearcut, Salvage, TSD) %>%
+  transmute(No.Fires+Clearcut+Salvage+TSD)
+EnM
+unique(EnM)
+```
 
