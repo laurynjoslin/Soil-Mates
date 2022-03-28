@@ -25,19 +25,19 @@ library(ape)
 ```
 
 
-
-
 ```{r}
 #in Soil-mates write.csv 
 #can see En.csv in Data folder
 #general not working why?
 #en <- read.csv("/./Data/En.csv")
-en <- read.csv("/Users/laurynjoslin/Dropbox/Soil-Mates/Data/En.csv")
+en <- read.csv("../Data/En.csv")
+
 ```
 
 ```{r}
 summary(en)
 ```
+getwd()
 
 ```{r}
 #Destructive forces summary
@@ -208,6 +208,7 @@ e <- ggplot(en)+
 salvage logged??")
 e
 ```
+
 ```{r}
 f <- ggplot(en)+
   geom_boxplot(aes(x = no_fires, y = log10(DTPA.Iron), fill = Salvage))+
@@ -219,6 +220,7 @@ f <- ggplot(en)+
 salvage logged?")
 f
 ```
+
 ```{r}
 g <- ggplot(en)+
   geom_boxplot(aes(x = no_fires, y = Potassium.Colwell, fill = Salvage))+
