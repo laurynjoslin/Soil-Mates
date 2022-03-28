@@ -55,31 +55,54 @@ en$no_fires <- as.character(en$No.Fires)
 ```
 
 
+```{r}
+en$clearcut <- as.character(en$Clearcut)
+```
 
 
 
 ```{r}
 ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = log10(Ammonium.Nitrogen)))
+  geom_boxplot(aes(x = no_fires, y = log10(Ammonium.Nitrogen), fill = clearcut))
 ```
 ```{r}
 ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = Organic.Carbon))
-```
-
-```{r}
-ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen))
+  geom_boxplot(aes(x = no_fires, y = Organic.Carbon, fill = clearcut))
 ```
 
 ```{r}
 ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = log10(Phosphorus.Colwell )))
+  geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen, fill = clearcut))
 ```
 
+```{r}
+ggplot(en)+
+  geom_boxplot(aes(x = no_fires, y = log10(Phosphorus.Colwell), fill = clearcut))
+```
 
+```{r}
+ggplot(en)+
+  geom_boxplot(aes(x = no_fires, y = Potassium.Colwell,fill = clearcut))
+```
 
+```{r}
+ggplot(en)+
+  geom_boxplot(aes(x = no_fires, y = log10(DTPA.Copper), fill = clearcut))
+```
 
+```{r}
+ggplot(en)+
+  geom_boxplot(aes(x = no_fires, y = log10(DTPA.Iron), fill = clearcut))
+```
+
+```{r}
+ggplot(en)+
+  geom_boxplot(aes(x = no_fires, y = log10(DTPA.Manganese), fill = clearcut))
+```
+```{r}
+ggplot(en)+
+  geom_boxplot(aes(x = no_fires, y = log10(Exc.Magnesium), fill = clearcut))
+```
 
 
 
