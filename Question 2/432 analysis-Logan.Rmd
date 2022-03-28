@@ -24,3 +24,62 @@ library(vegan)
 library(ape)
 ```
 
+
+
+
+```{r}
+#in Soil-mates write.csv 
+#can see En.csv in Data folder
+#general not working why?
+#en <- read.csv("/./Data/En.csv")
+en <- read.csv("/Users/laurynjoslin/Dropbox/Soil-Mates/Data/En.csv")
+```
+
+```{r}
+summary(en)
+```
+
+```{r}
+#Destructive forces summary
+
+#No.Fires - number of fires either 1, 2, 3 or 4
+#Clearcut- is it clearcut yes = 1, no = 0
+#Salvage - was it salvage logged - yes = 1, no = 0
+
+
+```
+
+
+```{r}
+en$no_fires <- as.character(en$No.Fires)
+```
+
+
+
+
+
+```{r}
+ggplot(en)+
+  geom_boxplot(aes(x = no_fires, y = log10(Ammonium.Nitrogen)))
+```
+```{r}
+ggplot(en)+
+  geom_boxplot(aes(x = no_fires, y = Organic.Carbon))
+```
+
+```{r}
+ggplot(en)+
+  geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen))
+```
+
+```{r}
+ggplot(en)+
+  geom_boxplot(aes(x = no_fires, y = log10(Phosphorus.Colwell )))
+```
+
+
+
+
+
+
+

@@ -65,6 +65,13 @@ D10<-bind_rows(Dat$Ar10,Dat$Ba10,Dat$Fu10) # Combines all for at depth 10
 D20<-bind_rows(Dat$Ar20,Dat$Ba20,Dat$Fu20) # Combines all microbes for for depth of 20
 ```
 
+```{r}
+#Writing En into Data folder to open in Question 2 rmd
+write.csv(En, file = "./Data/En.csv")
+```
+
+
+
 #### fix sample id so they consistent between Enviro table, Depth10, and Depth20
 ### contamination?
 ```{r}
@@ -75,6 +82,7 @@ tD10 <- tD10 %>%
   
 (tD10[1:3,1:3])
 ```
+
 
 
 
