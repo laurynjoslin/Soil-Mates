@@ -101,46 +101,41 @@ EnQ1 <- En
 EnQ1$Div <- c(Div1, Div2)
 ```
 
-#### Add proper names to a new column for Destructive History in a New environemental table - Needing fixing see below
+#### Add proper names to a new column for disturbance History in a New environemental table using a for loop
 ```{r}
 EnM <- EnQ1
-EnM$Destructive_History[EnM$No.Fires== 0 & EnM$Clearcut == 0 & EnM$Salvage == 0 & EnM$TSD == 167] <- "1850F"
-EnM$Destructive_History[EnM$No.Fires== 1 & EnM$Clearcut == 0 & EnM$Salvage == 0 & EnM$TSD == 78] <- "1939F"
-EnM$Destructive_History[EnM$No.Fires== 2 & EnM$Clearcut == 0 & EnM$Salvage == 0 & EnM$TSD == 34] <- "1939/1983F"
-EnM$Destructive_History[EnM$No.Fires== 2 & EnM$Clearcut == 0 & EnM$Salvage == 0 & EnM$TSD == 8] <- "1939/2009F"
-EnM$Destructive_History[EnM$No.Fires== 3 & EnM$Clearcut == 0 & EnM$Salvage == 0 & EnM$TSD == 8] <- "1939/1983/2009F"
-EnM$Destructive_History[EnM$No.Fires== 1 & EnM$Clearcut == 1 & EnM$Salvage == 0 & EnM$TSD == 34] <- "1939F/1980CC"
-EnM$Destructive_History[EnM$No.Fires== 1 & EnM$Clearcut == 1 & EnM$Salvage == 0 & EnM$TSD == 8] <- "1939F/2009CC"
-EnM$Destructive_History[EnM$No.Fires== 2 & EnM$Clearcut == 0 & EnM$Salvage == 1 & EnM$TSD == 8] <- "1939/2009F/2009SL"
-EnM$Destructive_History[EnM$No.Fires== 2 & EnM$Clearcut == 1 & EnM$Salvage == 0 & EnM$TSD == 8] <- "1939/1983F/2009CC"
-```
-
-#### Preferable for loop that does the same thing but Joel couldn't figure out 
-#{r}
-EnM <- En
-EnM$Destructive_History <- list(length(EnM))
-for(i in length(EnM)) {
-  if((EnM$No.Fires== 0) && (EnM$Clearcut == 0) && (EnM$Salvage == 0) && (EnM$TSD == 168))
-  { replace(EnM$Destructive_History <- "1850F")
-  }
+for (i in 1:nrow(EnM)) { 
+  if (EnM$TSD[i] == 167) {
+  EnM$Disturbance_History[i] <- "1850F"
+  } else if (EnM$TSD[i] == 78) {
+  EnM$Disturbance_History[i] <- "1939F" 
+  } else if ((EnM$No.Fires[i]== 2) && (EnM$TSD[i] == 34)) {
+  EnM$Disturbance_History[i] <- "1939/1983F"
+  } else if ((EnM$No.Fires[i]== 2) && (EnM$Salvage[i] == 0) && (EnM$Clearcut[i] == 0) && (EnM$TSD[i] == 8)) {
+  EnM$Disturbance_History[i] <- "1939/2009F" 
+  } else if (EnM$No.Fires[i]== 3) {
+  EnM$Disturbance_History[i] <- "1939/1983/2009F" 
+  } else if ((EnM$No.Fires[i]== 1) && (EnM$Clearcut[i] == 1) && (EnM$TSD[i] == 34)) {
+  EnM$Disturbance_History[i] <- "1939F/1980CC"
+  } else if ((EnM$No.Fires[i]== 1) && (EnM$Clearcut[i] == 1) && (EnM$TSD[i] == 8)) {
+  EnM$Disturbance_History[i] <- "1939F/2009CC"
+  } else if (EnM$Salvage[i] == 1) {
+  EnM$Disturbance_History[i] <- "1939/2009F/2009SL"
+  } else if ((EnM$No.Fires[i]== 2) && (EnM$Clearcut[i] == 1) && (EnM$TSD[i] == 8)) {
+  EnM$Disturbance_History[i] <- "1939/1983F/2009CC"
+  } 
 }
+unique(EnM$Disturbance_History) #checks unqiue to ensure I got all the every history
+```
 
 ```{r}
 ggplot(EnM, aes(x=Depth, y=Div)) +
-    geom_boxplot(aes(colour=I("black"), fill=Destructive_History)) +  
+    geom_boxplot(aes(colour=I("black"), fill=Disturbance_History)) +  
     labs(y="Alpha Diversity", 
          x="Depth of sample",
-         fill="Destructive History") + 
+         fill="Disturbance History") + 
   scale_x_discrete(labels=c("0-10cm", "20-30cm")) +
         theme_classic()
-```
-
-## Research Questions 3
-
-```{r}
-EnM
-
- 
 ```
 
 
