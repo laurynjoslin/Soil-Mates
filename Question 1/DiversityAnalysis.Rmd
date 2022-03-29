@@ -14,6 +14,7 @@ output: html_notebook
 Loading in packages 
 
 ```{r}
+library(tidyr)
 library(dplyr)
 library(tibble)
 library(ggplot2)
@@ -22,21 +23,198 @@ library(ggtree)
 library(vegan)
 library(cowplot)
 library(tidyverse)
+library(data.table)
 ```
 
 Loading in bacteria OTU 
 
 ```{r}
-
+bac_10 = read.csv("../Data/Dryad_Microbial_OTU_Tables_10_Bacteria.csv")
+bac_20 = read.csv("../Data/Dryad_Microbial_OTU_Tables_20_Bacteria.csv")
 ```
 
-
-
-
-### Question 1: Are destructive forces associated with decreasing microbial diversity
+We'll make a columnn that holds the entire phylogeny at the Family
 
 ```{r}
-plot(cars)
+bac_10$Phylogeny <- paste(bac_10$Phyla, bac_10$Class, bac_10$Order, bac_10$Family, sep = "")
+bac_20$Phylogeny <- paste(bac_20$Phyla, bac_20$Class, bac_20$Order, bac_20$Family, sep = "")
 ```
+
+Making a function that removes the X prior to sample names and adding the "depth" of the sample
+
+```{r}
+changenames <- function(df, depth) {
+for ( col in 1:ncol(df)){
+    colnames(df)[col] <-  sub("X", depth, colnames(df)[col])
+    
+}
+  return (df)
+}
+```
+
+Applying the functions, overwrites bac_10 and bac_20
+```{r}
+bac_10 = changenames(bac_10, 'depth10_')
+bac_20 = changenames(bac_20, 'depth20_')
+```
+
+In cases where the Phylogeny is the same across multiple rows, we will sum them
+
+```{r}
+bac_10_agglom = bac_10 %>%
+  group_by(Phylogeny) %>%
+  summarise_if(is.numeric, sum) %>% 
+  select (-cluster)
+
+bac_20_agglom = bac_20 %>%
+  group_by(Phylogeny) %>%
+  summarise_if(is.numeric, sum) %>% 
+  select (-Cluster)
+```
+
+Checking the dimensions to see how different the number of phylogenies are
+- the 0-10cm depth OTU table had more unique phylognies compareed to the 20-30cm OTU table
+- Both have the same number of samples
+
+```{r}
+dim(bac_10_agglom)
+dim(bac_20_agglom)
+
+# find the number of unique phylogenies, we should expect 419 upon merging
+length(unique(c(bac_10_agglom$Phylogeny, bac_20_agglom$Phylogeny)))
+```
+
+We're going to transpose the tables now--> need the column names
+
+```{r}
+bac_10_agglom_t =transpose(setDT(bac_10_agglom), make.names = 'Phylogeny', keep.names = 'Phylogeny')
+bac_20_agglom_t =transpose(setDT(bac_20_agglom), make.names = 'Phylogeny', keep.names = 'Phylogeny')
+```
+
+Merging 
+
+```{r}
+bac = rbind(bac_10_agglom_t, bac_20_agglom_t,fill=TRUE)
+```
+
+Confirming the correct nunmber of columns! yes, we had 419 unique phylogennies and we created a bound datafraame with 419 unique phylogenies
+
+```{r}
+# We subtracct 1 because the first column holds the sample ids 
+ncol(bac) -1
+```
+
+
+Adding a columnn that holds depth
+
+```{r}
+bac = bac %>% 
+  mutate(depth = ifelse(grepl("depth10_", Phylogeny), '10',"20")) 
+```
+
+making the df to hold info
+** ADD ENVIRONMENTAL DATA!!! USING EN FILE
+
+```{r}
+df = bac[, c("Phylogeny", "depth")]
+```
+
+
+Adding the environment table--> make column that matches depth10_39198 and merge
+
+```{r}
+en = read.csv("../Data/en.csv")
+
+en = en %>% 
+  mutate(Phylogeny = ifelse(grepl("010cm", Depth), paste0('depth10_',Sample), paste0('depth20_',Sample))) 
+```
+
+```{r}
+describe = merge(df, en, by = 'Phylogeny')
+```
+
+
+
+Making the row names, the sample names so we don't lose them
+
+```{r}
+bac = bac %>% 
+  remove_rownames %>% 
+  column_to_rownames(var="Phylogeny")
+```
+
+Conversion to binary
+
+```{r}
+# need to drop the last column!!!!!
+bac_bin<-subset(bac, select = -depth)
+bac_bin[bac_bin>0]<-1
+```
+
+Calculating the pairwise distance of this binary matrix
+
+```{r}
+bac_bin_dist<-dist(bac_bin,method='binary')
+```
+
+
+```{r}
+OTU_tree<-nj(bac_bin_dist)
+
+ggtree(OTU_tree,layout="rectangular")%<+% 
+  df + 
+  geom_tiplab(aes(colour=depth))
+```
+
+Convert NA values to 0s
+```{r}
+bac_nona = bac %>%
+  mutate(across(where(is.numeric), ~ ifelse(is.na(.), 0, .)))
+
+```
+
+
+
+also calcuulate the bray curtis...
+```{r}
+OTU_dist<- vegdist(subset(bac_nona, select = -depth),method="bray",binary=F) 
+OTU_tree2<-nj(OTU_dist)
+```
+
+
+
+
+
+```{r}
+ggtree(OTU_tree2) %<+% 
+  df + 
+  geom_tippoint(aes(color=depth)) 
+
+```
+
+
+Calculating NMDS
+
+```{r}
+set.seed(13)
+NMDSdat<-metaMDS(OTU_dist,k=2) # k = 2 dimensions
+```
+
+
+```{r}
+PDat<-data.frame(NMDS1=NMDSdat$points[,1],
+                 NMDS2=NMDSdat$points[,2],
+                 SampleID=row.names(bac))
+
+PDat$depth = describe$depth
+
+PDat$Clearcut = describe$Clearcut
+PDat$Salvage = describe$Salvage
+PDat$Slope = describe$Slope
+
+qplot(x=NMDS1,y=NMDS2,colour=(Slope),alpha=I(0.6),data=PDat)+theme_bw()
+```
+
+
 
 

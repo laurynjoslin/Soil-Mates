@@ -1,4 +1,15 @@
 ---
+title: "Logan432 analysis"
+author: "Logan Wisteard"
+date: '2022-03-29'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+---
 title: "432 analysis-Logan"
 author: "Logan Wisteard"
 date: '2022-03-23'
@@ -26,12 +37,7 @@ library(ape)
 
 
 ```{r}
-#in Soil-mates write.csv 
-#can see En.csv in Data folder
-#general not working why?
-#en <- read.csv("/./Data/En.csv")
 en <- read.csv("../Data/En.csv")
-
 ```
 
 ```{r}
@@ -41,17 +47,14 @@ getwd()
 
 ```{r}
 #Destructive forces summary
-
 #No.Fires - number of fires either 1, 2, 3 or 4
 #Clearcut- is it clearcut yes = 1, no = 0
 #Salvage - was it salvage logged - yes = 1, no = 0
 #TSD is time since disturbance
-
 ```
 
 ```{r}
 #chemical info
-
 #colwell is a way of measuring availibility of that element
 #DTPA is Diethylenetriaminepentaacetic acid which extracts trace elements
 #
@@ -268,7 +271,6 @@ a <- ggplot(en)+
   scale_y_continuous(name = "Nitrate form of Nitrogen (ppm)\n")+
   labs(fill = "Was the site 
 clear cut?")
-
 b <- ggplot(en)+
   geom_boxplot(aes(x = no_fires, y = Potassium.Colwell, fill = clearcut))+
   scale_fill_manual(labels = c('No','Yes'), values = clearcutpal)+
@@ -279,8 +281,6 @@ b <- ggplot(en)+
   scale_y_continuous(name = "Potassium (ppm)\n")+
   labs(fill = "Was the site 
 clear cut?")
-
-
 c <- ggplot(en)+
   geom_boxplot(aes(x = no_fires, y = log10(DTPA.Iron), fill = clearcut))+
   scale_fill_manual(labels = c('No','Yes'), values = clearcutpal)+
@@ -291,7 +291,6 @@ c <- ggplot(en)+
   scale_y_continuous(name = expression(paste(log[10]," (Iron ppm)")))+
   labs(fill = "Was the site 
 clear cut?")
-
 d <- ggplot(en)+
   geom_boxplot(aes(x = no_fires, y = Organic.Carbon, fill = clearcut))+
   scale_fill_manual(labels = c('No','Yes'), values = clearcutpal)+
@@ -301,8 +300,6 @@ d <- ggplot(en)+
   scale_y_continuous(name = "Organic Carbon (ppm)\n")+
   labs(fill = "Was the site 
 clear cut?")
-
-
 h <- ggplot(en)+
   geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen, fill = Salvage))+
   scale_fill_manual(labels = c('No','Yes'), values = salvagepal)+
@@ -313,7 +310,6 @@ h <- ggplot(en)+
   scale_y_continuous(name = "Nitrate form of Nitrogen (ppm)\n")+
   labs(fill = "Was the site 
 salvage logged?")
-
 g <- ggplot(en)+
   geom_boxplot(aes(x = no_fires, y = Potassium.Colwell, fill = Salvage))+
   scale_fill_manual(labels = c('No','Yes'), values = salvagepal)+
@@ -324,7 +320,6 @@ g <- ggplot(en)+
   scale_y_continuous(name = "Potassium (ppm)\n")+
   labs(fill = "Was the site 
 salvage logged?")
-
 f <- ggplot(en)+
   geom_boxplot(aes(x = no_fires, y = log10(DTPA.Iron), fill = Salvage))+
   scale_fill_manual(labels = c('No','Yes'), values = salvagepal)+
@@ -335,7 +330,6 @@ f <- ggplot(en)+
   scale_y_continuous(name = expression(paste(log[10]," (Iron ppm)")))+
   labs(fill = "Was the site 
 salvage logged?")
-
 e <- ggplot(en)+
   geom_boxplot(aes(x = no_fires, y = Organic.Carbon, fill = Salvage))+
   scale_fill_manual(labels = c('No','Yes'), values = salvagepal)+
@@ -345,9 +339,4 @@ e <- ggplot(en)+
   scale_y_continuous(name = "Organic Carbon (ppm)\n")+
   labs(fill = "Was the site 
 salvage logged??")
-
 ```
-
-
-
-
