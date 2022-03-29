@@ -57,10 +57,8 @@ Dat$En20 <- Dat$En20 %>% # Makes so that when both Enviro tables are combined na
          pH.CaCl2.=(pH.Level..CaCl2.),
          Archaea=(Archaea_020cm),
          Bacteria=(Bacteria_020cm),
-         Fungi=(Fungi_020cm)) #%>%
-  ## replace(TSD, -1)
-
-
+         Fungi=(Fungi_020cm)) %>%
+  mutate(TSD= as.numeric(TSD)-1)
 ```
 #### Combines datasets - reproducibility likely can be enhanced - this one uses the Importing all at once
 ```{r}
@@ -78,10 +76,8 @@ write.csv(En, file = "./Data/En.csv")
 #### Diversity
 ```{r}
 tD10 <- D10
-
 tD10 <- tD10 %>%
   select(-Cluster, -Sample, -Phyla, -Class, -Order, -Family)
-
 tD10 <- t(tD10)
 ```
 
@@ -108,21 +104,39 @@ EnQ1 <- En
 EnQ1$Div <- c(Div, Div2)
 ```
 
+#### Add proper names to a new column for Destructive History in a New environemental table - Needing fixing possibly a loop or something
 ```{r}
-qplot(x=EnQ1$No.Fires, y=EnQ1$Div)
+EnM <- EnQ1
+EnM$Destructive_History[EnM$No.Fires== 0 & EnM$Clearcut == 0 & EnM$Salvage == 0 & EnM$TSD == 168] <- "1850F"
+EnM$Destructive_History[EnM$No.Fires== 1 & EnM$Clearcut == 0 & EnM$Salvage == 0 & EnM$TSD == 78] <- "1939F"
+EnM$Destructive_History[EnM$No.Fires== 2 & EnM$Clearcut == 0 & EnM$Salvage == 0 & EnM$TSD == 34] <- "1939/1983F"
+EnM$Destructive_History[EnM$No.Fires== 2 & EnM$Clearcut == 0 & EnM$Salvage == 0 & EnM$TSD == 8] <- "1939/2009F"
+EnM$Destructive_History[EnM$No.Fires== 3 & EnM$Clearcut == 0 & EnM$Salvage == 0 & EnM$TSD == 8] <- "1939/1983/2009F"
+EnM$Destructive_History[EnM$No.Fires== 1 & EnM$Clearcut == 1 & EnM$Salvage == 0 & EnM$TSD == 34] <- "1939F/1980CC"
+EnM$Destructive_History[EnM$No.Fires== 1 & EnM$Clearcut == 1 & EnM$Salvage == 0 & EnM$TSD == 8] <- "1939F/2009CC"
+EnM$Destructive_History[EnM$No.Fires== 2 & EnM$Clearcut == 0 & EnM$Salvage == 1 & EnM$TSD == 8] <- "1939/2009F/2009SL"
+EnM$Destructive_History[EnM$No.Fires== 2 & EnM$Clearcut == 1 & EnM$Salvage == 0 & EnM$TSD == 8] <- "1939/1983F/2009CC"
 ```
 
 ```{r}
-qplot(No.Fires, Microbial_diversity, data=EnQ1) 
+ggplot(EnM, aes(x=Destructive_History, y=Div)) +
+    geom_boxplot(aes(colour=I("black"), fill=Depth)) 
+  
+    labs(y="Competitor mean three-dimensional diameter (in log(cm))", 
+         x="Competitor morphology (Branching, Columnar, Encrusting, Foliaceous, Massive, Sub-branching, Tabular)",
+         fill="Competitor Mophology") +
+         theme_classic())
 ```
 
-#### Doesn't work 
+
+
 ```{r}
-EnM <- En
-EnM <- EnM %>%
-  select(No.Fires, Clearcut, Salvage, TSD) %>%
-  transmute(No.Fires+Clearcut+Salvage+TSD)
-EnM
-unique(EnM)
+ggplot(EnM, aes(x=Destructive_History, y=Div)) +
+    geom_boxplot(aes(colour=I("black"), fill=MorphoComp)) 
+  
+    labs(y="Competitor mean three-dimensional diameter (in log(cm))", 
+         x="Competitor morphology (Branching, Columnar, Encrusting, Foliaceous, Massive, Sub-branching, Tabular)",
+         fill="Competitor Mophology") +
+         theme_classic())
 ```
 
