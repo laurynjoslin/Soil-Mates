@@ -6,7 +6,10 @@ output: html_notebook
 
 ## Background
 - a little about destructive forces/ soil health --> I can write this later
+--> for a site comparison= use all 3 
 
+Addressing Question 1: Are destructive forces associated with decreasing microbial diversity? 
+- What kind of disturbances impact beta diversity the greatest?
 
 
 ### Preprocessing
@@ -33,12 +36,84 @@ bac_10 = read.csv("../Data/Dryad_Microbial_OTU_Tables_10_Bacteria.csv")
 bac_20 = read.csv("../Data/Dryad_Microbial_OTU_Tables_20_Bacteria.csv")
 ```
 
-We'll make a columnn that holds the entire phylogeny at the Family
+```{r}
+temp <- list.files("../Data",pattern="Dryad_Microbial_OTU+.*csv", full.names = T) #creates an object that contains a string of file names with directory so they can be located
+
+# Initializing list
+Dat <- rep(0, length(temp)) # creates an empty vector used in the for loop
+```
 
 ```{r}
-bac_10$Phylogeny <- paste(bac_10$Phyla, bac_10$Class, bac_10$Order, bac_10$Family, sep = "")
-bac_20$Phylogeny <- paste(bac_20$Phyla, bac_20$Class, bac_20$Order, bac_20$Family, sep = "")
+
+for (i in seq_along(temp)) { # creates a list (I dont know if this is the right term) of dataframes
+  Dat[[i]] <- read.csv(
+    file = temp[[i]]
+  )
+}
 ```
+
+
+```{r}
+Dat
+```
+
+
+```{r}
+for (i in seq_along(temp)) { 
+  print(temp[i])
+  data.frame(assign(sub(".csv", "",sub("../Data/Dryad_Microbial_OTU_Table*", "", temp[i])), data.frame(Dat[i])))
+  
+}
+```
+
+Making all column names upper case
+```{r}
+upper <- function(df) {
+for( i in colnames(df)){
+    colnames(df)[which(colnames(df)==i)] = toupper(i)
+}
+    return (df)
+  
+}
+
+```
+
+```{r}
+s_10_Archaea = upper(s_10_Archaea)
+s_20_Archaea = upper(s_20_Archaea)
+s_10_Bacteria = upper(s_10_Bacteria)
+s_20_Bacteria = upper(s_20_Bacteria)
+s_10_Fungi = upper(s_10_Fungi)
+s_20_Fungi = upper(s_20_Fungi)
+```
+
+
+We'll make a columnn that holds the entire phylogeny at the Family
+** NEEDS TO BE GENERALIZED
+
+```{r}
+s_10_Archaea$Phylogeny <- paste0(s_10_Archaea$PHYLA, s_10_Archaea$CLASS, s_10_Archaea$ORDER, s_10_Archaea$FAMILY, sep = "")
+s_20_Archaea$Phylogeny <- paste0(s_20_Archaea$PHYLA, s_20_Archaea$CLASS, s_20_Archaea$ORDER, s_20_Archaea$FAMILY, sep = "")
+
+s_10_Bacteria$Phylogeny <- paste0(s_10_Bacteria$PHYLA, s_10_Bacteria$CLASS, s_10_Bacteria$ORDER, s_10_Bacteria$FAMILY, sep = "")
+s_20_Bacteria$Phylogeny <- paste0(s_20_Bacteria$PHYLA, s_20_Bacteria$CLASS, s_20_Bacteria$ORDER, s_20_Bacteria$FAMILY, sep = "")
+
+s_10_Fungi$Phylogeny <- paste0(s_10_Fungi$PHYLA, s_10_Fungi$CLASS, s_10_Fungi$ORDER, s_10_Fungi$FAMILY, sep = "")
+s_20_Fungi$Phylogeny <- paste0(s_20_Fungi$PHYLA, s_20_Fungi$CLASS, s_20_Fungi$ORDER, s_20_Fungi$FAMILY, sep = "")
+```
+
+
+*** nnot working,.,???
+```{r}
+dfs = c(s_10_Bacteria)
+
+for (i in seq_along(dfs)) { 
+  dfs[[i]]$Phylogeny <- paste(dfs[[i]]$Phyla, dfs[[i]]$Class,  sep = "")
+}
+```
+
+
+
 
 Making a function that removes the X prior to sample names and adding the "depth" of the sample
 
@@ -52,10 +127,12 @@ for ( col in 1:ncol(df)){
 }
 ```
 
-Applying the functions, overwrites bac_10 and bac_20
+Applying the functions, overwrites s_10_Archaea
+** STOPPED HERE
+
 ```{r}
-bac_10 = changenames(bac_10, 'depth10_')
-bac_20 = changenames(bac_20, 'depth20_')
+s_10_Archaea = changenames(s_10_Archaea, 'depth10_')
+#bac_20 = changenames(bac_20, 'depth20_')
 ```
 
 In cases where the Phylogeny is the same across multiple rows, we will sum them
