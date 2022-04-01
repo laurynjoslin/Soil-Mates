@@ -306,7 +306,6 @@ describe = merge(df, en, by = 'Phylogeny')
 
 Making the row names, the sample names so we don't lose them
 
-Making this a function---> STOPPED HERE!!!!
 
 ```{r}
 rowname <- function(df) {
@@ -382,12 +381,6 @@ Calculating Bray-Curtis
 
 
 ```{r}
-OTU_dist<- vegdist(subset(bac_nona, select = -depth),method="bray",binary=F) 
-OTU_tree2<-nj(OTU_dist)
-```
-
-
-```{r}
 OTU_bray <- function(df) {
 
   OTU_dist<- vegdist(subset(df, select = -depth),method="bray",binary=F) 
@@ -405,6 +398,16 @@ bac_nonan_bray = OTU_bray(bac_nonan)
 fun_nonan_bray = OTU_bray(fun_nonan)
 
 all_nonan_bray = OTU_bray(all_nonan)
+
+# By depth
+
+# bacteria
+bac_nonan_bray_depth10 = OTU_bray(bac_nonan[bac_nonan$depth ==10,])
+bac_nonan_bray_depth20 = OTU_bray(bac_nonan[bac_nonan$depth ==20,])
+
+# for all
+all_nonan_bray_depth10 = OTU_bray(all_nonan[all_nonan$depth ==10,])
+all_nonan_bray_depth20 = OTU_bray(all_nonan[all_nonan$depth ==20,])
 ```
 
 Could make this a loop... across diff features ** ONly did it for arc_nonan_bray, repeat for other two df...
@@ -414,7 +417,7 @@ Could make this a loop... across diff features ** ONly did it for arc_nonan_bray
 features = c('depth', 'No.Fires', 'Clearcut', 'Salvage')
 
 for (i in features) {
-  print(ggtree(arc_nonan_bray[[2]]) %<+% 
+  print(ggtree(bac_nonan_bray_depth20[[2]]) %<+% 
   describe + 
   geom_tippoint(aes(color=as.factor(get(i)) ))+
   guides(color=guide_legend(title=i)))
@@ -449,16 +452,19 @@ Calculating NMDS
 Generalizing,, ,beccause all the row names match in order, we can pick one to use for propogating row names
 
 ```{r}
-
-
-NMDSdat_make <- function(df) {
+NMDSdat_make <- function(df, rowwing) {
   set.seed(13)
   
-  NMDSdat<-metaMDS(df,k=2) # k = 2 dimensions
+  # At 20 runs, fails to converge, 
+  #NMDSdat<-metaMDS(df,k=2) # k = 2 dimensions
+  # All fails to converge with 100 runs, so we'll increase to 200
+  #NMDSdat<-metaMDS(df,k=2, trymax = 100) # k = 2 dimensions
+  
+  NMDSdat<-metaMDS(df,k=2, trymax = 500) # k = 2 dimensions
 
   PDat<-data.frame(NMDS1=NMDSdat$points[,1],
                  NMDS2=NMDSdat$points[,2],
-                 Phylogeny=row.names(arc))
+                 Phylogeny=row.names(rowwing))
 return(PDat)
 }
 
@@ -468,11 +474,22 @@ return(PDat)
 Calling NMDSdat_make
 
 ```{r}
-NMDSdat_arc = NMDSdat_make(arc_nonan_bray[[1]])
-NMDSdat_bac = NMDSdat_make(bac_nonan_bray[[1]])
-NMDSdat_fun = NMDSdat_make(fun_nonan_bray[[1]])
+NMDSdat_arc = NMDSdat_make(arc_nonan_bray[[1]], arc)
+NMDSdat_bac = NMDSdat_make(bac_nonan_bray[[1]], arc)
+NMDSdat_fun = NMDSdat_make(fun_nonan_bray[[1]], arc)
 
-NMDSdat_all = NMDSdat_make(all_nonan_bray[[1]])
+NMDSdat_all = NMDSdat_make(all_nonan_bray[[1]], arc)
+
+# By depth
+
+# For bacteria
+NMDSdat_bac_depth10 = NMDSdat_make(bac_nonan_bray_depth10[[1]], arc[1:80,])
+NMDSdat_bac_depth20 = NMDSdat_make(bac_nonan_bray_depth20[[1]], arc[81:160,])
+
+
+# For all
+NMDSdat_all_depth10 = NMDSdat_make(all_nonan_bray_depth10[[1]], arc[1:80,])
+NMDSdat_all_depth20 = NMDSdat_make(all_nonan_bray_depth20[[1]], arc[81:160,])
 ```
 
 
@@ -484,105 +501,108 @@ NMDSdat_bac = merge(NMDSdat_bac, describe, by = 'Phylogeny')
 NMDSdat_fun = merge(NMDSdat_fun, describe, by = 'Phylogeny')
 
 NMDSdat_all = merge(NMDSdat_all, describe, by = 'Phylogeny')
+
+NMDSdat_bac_depth10 = merge(NMDSdat_bac_depth10, describe, by = 'Phylogeny')
+NMDSdat_bac_depth20 = merge(NMDSdat_bac_depth20, describe, by = 'Phylogeny')
+
+NMDSdat_all_depth10 = merge(NMDSdat_all_depth10, describe, by = 'Phylogeny')
+NMDSdat_all_depth20 = merge(NMDSdat_all_depth20, describe, by = 'Phylogeny')
 ```
 
-
+Making a loop dissecting categorical features for microbial communities
 
 ```{r}
-
-
-
-# that are factors
 features = c('depth', 'No.Fires', 'Clearcut', 'Salvage')
 
+
+viz_cats <- function(df) {
+  
 for (i in features) {
-  print(qplot(x=NMDS1,y=NMDS2,color=as.factor(get(i)), alpha= I(0.6), data=NMDSdat_all)+
+  print(qplot(x=NMDS1,y=NMDS2,color=as.factor(get(i)), alpha= I(0.6), data= df)+
   stat_ellipse() + 
   theme_bw()+
-   guides(color=guide_legend(title=i)) )
+   guides(color=guide_legend(title=i))+
+    ggtitle(deparse(substitute(df))))
 
 
 }
+}
 
-# Truee cont feeatures--> to add ellippse, wee need a low vs high
-cont = c('TSD', 'Ammonium.Nitrogen', 'Nitrate.Nitrogen', 'Phosphorus.Colwell', 'Potassium.Colwell', 'Organic.Carbon', 'DTPA.Copper', 'DTPA.Iron','DTPA.Manganese',  'Exc.Magnesium','Slope', 'Elevation', 'pH.CaCl2.')
 
+
+
+```
+
+Running viz_cats for all the NMDS dfs
+
+```{r}
+viz_cats(NMDSdat_arc)
+viz_cats(NMDSdat_bac)
+viz_cats(NMDSdat_fun)
+viz_cats(NMDSdat_all)
+
+viz_cats(NMDSdat_bac_depth10)
+viz_cats(NMDSdat_bac_depth20)
+
+viz_cats(NMDSdat_all_depth10)
+viz_cats(NMDSdat_all_depth20)
+```
+
+From the above, we determined:
+- Depth 10 vs 20 can make a big difference when comparing communities, especially bacterial ocmmunities
+--> Therefore we'll focus on the separated Bray-Curtis'
+
+  For Depth 10 and 20
+  - We see Clearcut 0 vs 1 overlaps however there is distinct clustering
+  
+We'll look at the continuous variables for these two to determine if their clustering is linked to a continuous soil indicator
+
+```{r}
+
+cont = c('Soil_fertility','TSD', 'Ammonium.Nitrogen', 'Nitrate.Nitrogen', 'Phosphorus.Colwell', 'Potassium.Colwell', 'Organic.Carbon', 'DTPA.Copper', 'DTPA.Iron','DTPA.Manganese',  'Exc.Magnesium','Slope', 'Elevation', 'pH.CaCl2.')
+
+
+viz_cont <- function(df) {
+  
 for (i in cont) {
-  print(qplot(x=NMDS1,y=NMDS2,color=get(i), alpha= I(0.6), data=NMDSdat_all)+
-  stat_ellipse() + 
-  theme_bw()+
-   guides(color=guide_legend(title=i)) )
+  print(ggplot(data = df, aes(NMDS1, NMDS2 )) + 
+  geom_point(aes(color=get(i), shape=as.factor(Clearcut), size=2, alpha=I(0.7) )) +
+  labs(color=i)+
+    ggtitle(deparse(substitute(df)))+
+  theme_bw())
 
 
 }
-```
-
-
-Lookin within a depth condition
-
-```{r}
-ggplot(data = NMDSdat_bac[NMDSdat_bac$depth =='10',], aes(NMDS1, NMDS2, color=as.factor(Clearcut))) + 
-  geom_point() +
-    stat_ellipse() + 
-  theme_bw()
-
-ggplot(data = NMDSdat_bac[NMDSdat_bac$depth =='20',], aes(NMDS1, NMDS2, color=as.factor(Clearcut))) + 
-  geom_point() +
-    stat_ellipse() + 
-  theme_bw()
-
-
-
-# focus on this one.. ddistinct clustering
-# maybe DTPA.Iron
-ggplot(data = NMDSdat_bac[NMDSdat_bac$depth =='10',], aes(NMDS1, NMDS2 )) + 
-  geom_point(aes(color=DTPA.Iron )) +
-    stat_ellipse(aes( group =No.Fires)) + 
-  theme_bw()
-
-ggplot(data = NMDSdat_bac[NMDSdat_bac$depth =='10',], aes(NMDS1, NMDS2 )) + 
-  geom_point(aes(color=as.factor(No.Fires ))) +
-    stat_ellipse(aes( group =as.factor(No.Fires), color=as.factor(No.Fires ))) + 
-  theme_bw()
-
-# mabee pH.CaCl2.??
-ggplot(data = NMDSdat_bac[NMDSdat_bac$depth =='10',], aes(NMDS1, NMDS2 )) + 
-  geom_point(aes(color=pH.CaCl2. )) +
-    stat_ellipse(aes( group =No.Fires)) + 
-  theme_bw()
-
-ggplot(data = NMDSdat_bac[NMDSdat_bac$depth =='10',], aes(NMDS1, NMDS2 )) + 
-  geom_point(aes(color=as.factor(No.Fires ))) +
-    stat_ellipse(aes( group =as.factor(No.Fires), color=as.factor(No.Fires ))) + 
-  theme_bw()
-
-
-
-# maybe ph??
-ggplot(data = NMDSdat_bac[NMDSdat_bac$depth =='20',], aes(NMDS1, NMDS2 )) + 
-  geom_point(aes(color=pH.CaCl2. )) +
-    stat_ellipse(aes( group =No.Fires)) + 
-  theme_bw()
-
-ggplot(data = NMDSdat_bac[NMDSdat_bac$depth =='20',], aes(NMDS1, NMDS2 )) + 
-  geom_point(aes(color=as.factor(No.Fires ))) +
-    stat_ellipse(aes( group =as.factor(No.Fires), color=as.factor(No.Fires ))) + 
-  theme_bw()
-
-
+}
 
 ```
 
+```{r}
+viz_cont(NMDSdat_bac_depth10)
+viz_cont(NMDSdat_bac_depth20)
+```
 
-Lookin within a depth condition
+From above, we can see
+- pH seems to help explain the difference among clearcut type--> for both depths
+
+Making final figures--> We'll need to add legend back...
 
 ```{r}
-qplot(x=NMDS1,y=NMDS2,color=Organic.Carbon, alpha= I(0.6), data=NMDSdat_bac[NMDSdat_bac$depth =='10',])+
-  theme_bw()
+a= ggplot(data = NMDSdat_bac_depth10, aes(NMDS1, NMDS2 )) + 
+  geom_point(aes(color=pH.CaCl2., shape=as.factor(Clearcut), size=2, alpha=I(0.7) )) +
+  xlim(c(-0.4,0.3))+
+  ylim(c(-0.25,0.2))+
+  theme_bw()+
+  theme(legend.position="none")
 
+b=ggplot(data = NMDSdat_bac_depth20, aes(NMDS1, NMDS2 )) + 
+  geom_point(aes(color=pH.CaCl2., shape=as.factor(Clearcut), size=2, alpha=I(0.7) )) +
+  xlim(c(-0.4,0.3))+
+  ylim(c(-0.25,0.2))+
+  theme_bw()+
+  theme(legend.position="none")
 
-qplot(x=NMDS1,y=NMDS2,color=as.factor(Salvage), alpha= I(0.6), data=NMDSdat_bac[NMDSdat_bac$depth =='20',])+
-  theme_bw()
+plot_grid(a, b, labels = "AUTO", align='vh',vjust=1, scale = 1)
 ```
 
 
