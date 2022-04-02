@@ -8,6 +8,7 @@ output: html_document
 library(dplyr)
 library(vegan)
 library(tidyverse)
+library(ggpubr)
 ```
 #### Importing all at one
 ```{r}
@@ -81,10 +82,12 @@ tD10 <- tD10 %>%
 tD10 <- t(tD10) #Transposes file
 ```
 
+# calculates diversity for depth 0-10cm
 ```{r}
 Div1 <- diversity(tD10, index = "shannon", MARGIN = 1, base= exp(1))
 ```
 
+# transposes depth 20 file
 ```{r}
 tD20 <- D20
 tD20 <- tD20 %>%
@@ -92,10 +95,15 @@ tD20 <- tD20 %>%
 tD20 <- t(tD20)
 ```
 
+#calculates diveristy for depth of 20-30cm
 ```{r}
 Div2 <- diversity(tD20, index = "shannon", MARGIN = 1, base= exp(1))
 ```
 
+## T-test of diversity between 
+```{r}
+t.test(Div1, Div2)
+```
 ```{r}
 EnQ1 <- En
 EnQ1$Div <- c(Div1, Div2)
@@ -128,6 +136,20 @@ for (i in 1:nrow(EnM)) {
 unique(EnM$Disturbance_History) #checks unqiue to ensure I got all the every history
 ```
 
+#### Plot of diversity by depth
+```{r}
+depth_mean <- data.frame(mean(Div1), mean(Div2))
+
+ggplot(EnM, aes(x=Depth, y=Div)) +
+    geom_boxplot(aes(colour=I("black"), fill=Depth)) +  
+    labs(y="Alpha Diversity", 
+         x="Depth of sample",
+         fill="Disturbance History") + 
+  scale_x_discrete(labels=c("0-10cm", "20-30cm")) +
+        theme_classic() + 
+  geom_line()
+```
+
 ```{r}
 ggplot(EnM, aes(x=Depth, y=Div)) +
     geom_boxplot(aes(colour=I("black"), fill=Disturbance_History)) +  
@@ -135,9 +157,21 @@ ggplot(EnM, aes(x=Depth, y=Div)) +
          x="Depth of sample",
          fill="Disturbance History") + 
   scale_x_discrete(labels=c("0-10cm", "20-30cm")) +
+  geom_hline(yintercept = mean(EnM$Disturbance_History), color="blue") +
         theme_classic()
 ```
 
+```{r}
+EnM$No.Fires <- as.character(EnM$No.Fires)
+ggplot(EnM, aes(x=No.Fires, y=Div)) +
+    geom_boxplot(aes(colour=I("black"), fill= Depth)) +  
+    labs(y="Alpha Diversity", fill="Number of Fires") + 
+        theme_classic()
+```
+
+```{r}
+EnM$TSD <- as.character(EnM$TSD)
 
 
+```
 
