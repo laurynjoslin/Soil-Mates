@@ -1,18 +1,7 @@
 ---
-title: "Logan432 analysis"
+title: "432analysis"
 author: "Logan Wisteard"
-date: '2022-03-29'
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
----
-title: "432 analysis-Logan"
-author: "Logan Wisteard"
-date: '2022-03-23'
+date: '2022-04-01'
 output: html_document
 ---
 
@@ -157,10 +146,11 @@ theme_boxplot_one <- function (base_size =12, base_family = ""){
 
 #Picking the best graphs from the exploring, and making them look publication ready
 
+## ADDING outlier.alpha =0.5 to see if outlier may be one point or more than one point
 
 ```{r}
 a <- ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen, fill = clearcut))+
+  geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen, fill = clearcut), outlier.alpha =0.5)+
   scale_fill_manual(labels = c('No','Yes'), values = clearcutpal)+
   theme_boxplot_one()+
   scale_x_discrete(name = "\nNumber of forest fires")+
@@ -245,9 +235,10 @@ salvage logged?")
 g
 ```
 
+## ADDING outlier.alpha =0.5 to see if outlier may be one point or more than one point
 ```{r}
 h <- ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen, fill = Salvage))+
+  geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen, fill = Salvage), outlier.alpha =0.5)+
   scale_fill_manual(labels = c('No','Yes'), values = salvagepal)+
   theme_boxplot_one()+
   scale_x_discrete(name = "\nNumber of forest fires")+

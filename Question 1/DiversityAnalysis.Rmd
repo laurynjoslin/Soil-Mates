@@ -6,7 +6,10 @@ output: html_notebook
 
 ## Background
 - a little about destructive forces/ soil health --> I can write this later
+--> for a site comparison= use all 3 
 
+Addressing Question 1: Are destructive forces associated with decreasing microbial diversity? 
+- What kind of disturbances impact beta diversity the greatest?
 
 
 ### Preprocessing
@@ -26,19 +29,103 @@ library(tidyverse)
 library(data.table)
 ```
 
-Loading in bacteria OTU 
 
 ```{r}
-bac_10 = read.csv("../Data/Dryad_Microbial_OTU_Tables_10_Bacteria.csv")
-bac_20 = read.csv("../Data/Dryad_Microbial_OTU_Tables_20_Bacteria.csv")
+temp =0
+temp <- list.files("../Data",pattern="Dryad_Microbial_OTU+.*csv", full.names = T) #creates an object that contains a string of file names with directory so they can be located
+
+# Initializing list
+Dat <- c()
 ```
+
+```{r}
+for (i in seq_along(temp)) { # creates a list (I dont know if this is the right term) of dataframes
+  Dat[[i]] <- read.csv(
+    file = temp[[i]]
+  )
+}
+```
+
+
+
+```{r}
+for (i in seq_along(temp)) { 
+  print(temp[i])
+  data.frame(assign(sub(".csv", "",sub("../Data/Dryad_Microbial_OTU_Table*", "", temp[i])), data.frame(Dat[i])))
+  
+}
+```
+
+
+Removal of unncessary columns by names, 
+
+```{r}
+s_10_Fungi <- subset(s_10_Fungi, select = -c(Trophic.Mode, Guild, Confidence.Ranking))
+s_20_Fungi <- subset(s_20_Fungi, select = -c(Trophic.Mode, Guild, Confidence.Ranking))
+```
+
+
+Making all column names upper case in order to standardize
+
+```{r}
+upper <- function(df) {
+for( i in colnames(df)){
+    colnames(df)[which(colnames(df)==i)] = toupper(i)
+}
+    return (df)
+  
+}
+
+```
+
+Calling uppers function
+
+```{r}
+s_10_Archaea = upper(s_10_Archaea)
+s_20_Archaea = upper(s_20_Archaea)
+s_10_Bacteria = upper(s_10_Bacteria)
+s_20_Bacteria = upper(s_20_Bacteria)
+s_10_Fungi = upper(s_10_Fungi)
+s_20_Fungi = upper(s_20_Fungi)
+```
+
 
 We'll make a columnn that holds the entire phylogeny at the Family
+** NEEDS TO BE GENERALIZED
 
 ```{r}
-bac_10$Phylogeny <- paste(bac_10$Phyla, bac_10$Class, bac_10$Order, bac_10$Family, sep = "")
-bac_20$Phylogeny <- paste(bac_20$Phyla, bac_20$Class, bac_20$Order, bac_20$Family, sep = "")
+s_10_Archaea$Phylogeny <- paste0(s_10_Archaea$PHYLA, s_10_Archaea$CLASS, s_10_Archaea$ORDER, s_10_Archaea$FAMILY, sep = "")
+s_20_Archaea$Phylogeny <- paste0(s_20_Archaea$PHYLA, s_20_Archaea$CLASS, s_20_Archaea$ORDER, s_20_Archaea$FAMILY, sep = "")
+
+s_10_Bacteria$Phylogeny <- paste0(s_10_Bacteria$PHYLA, s_10_Bacteria$CLASS, s_10_Bacteria$ORDER, s_10_Bacteria$FAMILY, sep = "")
+s_20_Bacteria$Phylogeny <- paste0(s_20_Bacteria$PHYLA, s_20_Bacteria$CLASS, s_20_Bacteria$ORDER, s_20_Bacteria$FAMILY, sep = "")
+
+s_10_Fungi$Phylogeny <- paste0(s_10_Fungi$PHYLA, s_10_Fungi$CLASS, s_10_Fungi$ORDER, s_10_Fungi$FAMILY, sep = "")
+s_20_Fungi$Phylogeny <- paste0(s_20_Fungi$PHYLA, s_20_Fungi$CLASS, s_20_Fungi$ORDER, s_20_Fungi$FAMILY, sep = "")
 ```
+
+Renaming the Phylum columnn
+
+```{r}
+colnames(s_10_Archaea)[colnames(s_10_Archaea) == 'PHYLUM'] <- 'PHYLA'
+```
+
+
+```{r}
+dfs = list(s_10_Archaea, s_20_Archaea, s_10_Bacteria,s_20_Bacteria,s_10_Fungi,s_20_Fungi)
+
+dfs_new <- lapply(dfs, function(x) transform(x, Phylogeny = paste(PHYLA,CLASS,ORDER,FAMILY,sep=":")))
+
+# makee into function or loop...
+
+s_10_Archaea = dfs_new[[1]]
+s_20_Archaea = dfs_new[[2]]
+s_10_Bacteria = dfs_new[[3]]
+s_20_Bacteria = dfs_new[[4]]
+s_10_Fungi = dfs_new[[5]]
+s_20_Fungi = dfs_new[[6]]
+```
+
 
 Making a function that removes the X prior to sample names and adding the "depth" of the sample
 
@@ -52,68 +139,150 @@ for ( col in 1:ncol(df)){
 }
 ```
 
-Applying the functions, overwrites bac_10 and bac_20
+Applying the functions, overwrites s_10_Archaea
+
+
 ```{r}
-bac_10 = changenames(bac_10, 'depth10_')
-bac_20 = changenames(bac_20, 'depth20_')
+s_10_Archaea = changenames(s_10_Archaea, 'depth10_')
+s_20_Archaea = changenames(s_20_Archaea, 'depth20_')
+
+s_10_Bacteria = changenames(s_10_Bacteria, 'depth10_')
+s_20_Bacteria = changenames(s_20_Bacteria, 'depth20_')
+
+s_10_Fungi = changenames(s_10_Fungi, 'depth10_')
+s_20_Fungi = changenames(s_20_Fungi, 'depth20_')
 ```
 
 In cases where the Phylogeny is the same across multiple rows, we will sum them
 
 ```{r}
-bac_10_agglom = bac_10 %>%
-  group_by(Phylogeny) %>%
+groupby_ing <- function(df) {
+  
+  df <- df %>% 
+      group_by(Phylogeny) %>%
   summarise_if(is.numeric, sum) %>% 
-  select (-cluster)
+  select (-CLUSTER)
+  return (df)
 
-bac_20_agglom = bac_20 %>%
-  group_by(Phylogeny) %>%
-  summarise_if(is.numeric, sum) %>% 
-  select (-Cluster)
+}
 ```
+
+Calling the agglomeration function for all the tables
+
+```{r}
+s_10_Archaea_agglom = groupby_ing(s_10_Archaea)
+s_20_Archaea_agglom = groupby_ing(s_20_Archaea)
+
+s_10_Bacteria_agglom = groupby_ing(s_10_Bacteria)
+s_20_Bacteria_agglom = groupby_ing(s_20_Bacteria)
+
+s_10_Fungi_agglom = groupby_ing(s_10_Fungi)
+s_20_Fungi_agglom = groupby_ing(s_20_Fungi)
+```
+
+
 
 Checking the dimensions to see how different the number of phylogenies are
 - the 0-10cm depth OTU table had more unique phylognies compareed to the 20-30cm OTU table
 - Both have the same number of samples
 
 ```{r}
-dim(bac_10_agglom)
-dim(bac_20_agglom)
+# For archaea
+dim(s_10_Archaea_agglom)
+dim(s_20_Archaea_agglom)
+# find the number of unique phylogenies, we should expect 19 upon merging
+length(unique(c(s_10_Archaea_agglom$Phylogeny, s_20_Archaea_agglom$Phylogeny)))
 
+# For bacteria
+dim(s_10_Bacteria_agglom)
+dim(s_20_Bacteria_agglom)
 # find the number of unique phylogenies, we should expect 419 upon merging
-length(unique(c(bac_10_agglom$Phylogeny, bac_20_agglom$Phylogeny)))
+length(unique(c(s_10_Bacteria_agglom$Phylogeny, s_20_Bacteria_agglom$Phylogeny)))
+
+# For fungi
+dim(s_10_Fungi_agglom)
+dim(s_20_Fungi_agglom)
+# find the number of unique phylogenies, we should expect 321 upon merging
+length(unique(c(s_10_Fungi_agglom$Phylogeny, s_20_Fungi_agglom$Phylogeny)))
 ```
 
-We're going to transpose the tables now--> need the column names
+We're going to transpose the tables now--> need the column names--> use function..!!! STOPPED HEREE...
+
 
 ```{r}
-bac_10_agglom_t =transpose(setDT(bac_10_agglom), make.names = 'Phylogeny', keep.names = 'Phylogeny')
-bac_20_agglom_t =transpose(setDT(bac_20_agglom), make.names = 'Phylogeny', keep.names = 'Phylogeny')
+transposing <- function(df) {
+  
+df = transpose(setDT(df), make.names = 'Phylogeny', keep.names = 'Phylogeny')
+  
+  return (df)
+
+}
 ```
 
-Merging 
+Calling transposing function
 
 ```{r}
-bac = rbind(bac_10_agglom_t, bac_20_agglom_t,fill=TRUE)
+s_10_Archaea_agglom_t = transposing(s_10_Archaea_agglom)
+s_20_Archaea_agglom_t = transposing(s_20_Archaea_agglom)
+
+s_10_Bacteria_agglom_t = transposing(s_10_Bacteria_agglom)
+s_20_Bacteria_agglom_t = transposing(s_20_Bacteria_agglom)
+
+s_10_Fungi_agglom_t = transposing(s_10_Fungi_agglom)
+s_20_Fungi_agglom_t = transposing(s_20_Fungi_agglom)
 ```
 
-Confirming the correct nunmber of columns! yes, we had 419 unique phylogennies and we created a bound datafraame with 419 unique phylogenies
+Making multiple merges, we'll merge the archaea, bacteria and fungi, and make 1 large OTU with all 3
 
 ```{r}
-# We subtracct 1 because the first column holds the sample ids 
+arc = rbind(s_10_Archaea_agglom_t, s_20_Archaea_agglom_t,fill=TRUE)
+# checking unique number, we are expecting 19
+ncol(arc) -1
+
+bac = rbind(s_10_Bacteria_agglom_t, s_20_Bacteria_agglom_t,fill=TRUE)
+# checking unique number, we are expecting 419
 ncol(bac) -1
+
+fun = rbind(s_10_Fungi_agglom_t, s_20_Fungi_agglom_t,fill=TRUE)
+# checking unique number, we are expecting 321
+ncol(fun) -1
+
+# Merging all together
+all = list(arc,bac,fun ) %>% 
+  reduce(full_join, by = "Phylogeny")
+
+
 ```
 
 
-Adding a columnn that holds depth
+
+
+Addinng column for depth with a function
 
 ```{r}
-bac = bac %>% 
-  mutate(depth = ifelse(grepl("depth10_", Phylogeny), '10',"20")) 
+add_depth <- function(df) {
+  
+  df <- df %>% 
+      mutate(depth = ifelse(grepl("depth10_", Phylogeny), '10',"20")) 
+  
+  return (df)
+
+}
 ```
+
+
+Calling add_depth function
+
+```{r}
+arc = add_depth(arc)
+bac = add_depth(bac)
+fun = add_depth(fun)
+
+all = add_depth(all)
+```
+
 
 making the df to hold info
-** ADD ENVIRONMENTAL DATA!!! USING EN FILE
 
 ```{r}
 df = bac[, c("Phylogeny", "depth")]
@@ -137,13 +306,30 @@ describe = merge(df, en, by = 'Phylogeny')
 
 Making the row names, the sample names so we don't lose them
 
+
 ```{r}
-bac = bac %>% 
+rowname <- function(df) {
+  
+  df = df %>% 
   remove_rownames %>% 
   column_to_rownames(var="Phylogeny")
+  
+  return (df)
+
+}
 ```
 
-Conversion to binary
+Calling rowname
+```{r}
+arc = rowname(arc)
+bac = rowname(bac)
+fun = rowname(fun)
+
+all = rowname(all)
+```
+
+
+skipp - Conversion to binary
 
 ```{r}
 # need to drop the last column!!!!!
@@ -151,13 +337,13 @@ bac_bin<-subset(bac, select = -depth)
 bac_bin[bac_bin>0]<-1
 ```
 
-Calculating the pairwise distance of this binary matrix
+skipp -Calculating the pairwise distance of this binary matrix
 
 ```{r}
 bac_bin_dist<-dist(bac_bin,method='binary')
 ```
 
-
+skipp -
 ```{r}
 OTU_tree<-nj(bac_bin_dist)
 
@@ -166,55 +352,258 @@ ggtree(OTU_tree,layout="rectangular")%<+%
   geom_tiplab(aes(colour=depth))
 ```
 
-Convert NA values to 0s
+HERE... Convert NA values to 0s
+
+Removing and converting NA into 0s
+
 ```{r}
-bac_nona = bac %>%
+nonan <- function(df) {
+  
+df = df %>%
   mutate(across(where(is.numeric), ~ ifelse(is.na(.), 0, .)))
+  
+  return (df)
+
+}
+```
+
+Calling nonnan function
+
+```{r}
+arc_nonan = nonan(arc)
+bac_nonan = nonan(bac)
+fun_nonan = nonan(fun)
+
+all_nonan = nonan(all)
+```
+
+Calculating Bray-Curtis
+
+
+```{r}
+OTU_bray <- function(df) {
+
+  OTU_dist<- vegdist(subset(df, select = -depth),method="bray",binary=F) 
+  OTU_tree2<-nj(OTU_dist)
+  
+   return(list(OTU_dist,OTU_tree2))
+}
+```
+
+Calling OTU_bray function
+
+```{r}
+arc_nonan_bray = OTU_bray(arc_nonan)
+bac_nonan_bray = OTU_bray(bac_nonan)
+fun_nonan_bray = OTU_bray(fun_nonan)
+
+all_nonan_bray = OTU_bray(all_nonan)
+
+# By depth
+
+# bacteria
+bac_nonan_bray_depth10 = OTU_bray(bac_nonan[bac_nonan$depth ==10,])
+bac_nonan_bray_depth20 = OTU_bray(bac_nonan[bac_nonan$depth ==20,])
+
+# for all
+all_nonan_bray_depth10 = OTU_bray(all_nonan[all_nonan$depth ==10,])
+all_nonan_bray_depth20 = OTU_bray(all_nonan[all_nonan$depth ==20,])
+```
+
+Could make this a loop... across diff features ** ONly did it for arc_nonan_bray, repeat for other two df...
+
+```{r}
+# that are factors
+features = c('depth', 'No.Fires', 'Clearcut', 'Salvage')
+
+for (i in features) {
+  print(ggtree(bac_nonan_bray_depth20[[2]]) %<+% 
+  describe + 
+  geom_tippoint(aes(color=as.factor(get(i)) ))+
+  guides(color=guide_legend(title=i)))
+
+
+}
+
+# Truee scalars
+cont = c('TSD', 'Ammonium.Nitrogen', 'Nitrate.Nitrogen', 'Phosphorus.Colwell', 'Potassium.Colwell', 'Organic.Carbon', 'DTPA.Copper', 'DTPA.Iron','DTPA.Manganese',  'Exc.Magnesium','Slope', 'Elevation', 'pH.CaCl2.')
+
+for (i in cont) {
+  print(ggtree(arc_nonan_bray[[2]]) %<+% 
+  describe + 
+  geom_tippoint(aes(color=get(i) ))+
+  guides(color=guide_legend(title=i)))
+
+}
 
 ```
 
 
-
-also calcuulate the bray curtis...
-```{r}
-OTU_dist<- vegdist(subset(bac_nona, select = -depth),method="bray",binary=F) 
-OTU_tree2<-nj(OTU_dist)
-```
-
-
-
-
+Checking if row names match with regards to order
 
 ```{r}
-ggtree(OTU_tree2) %<+% 
-  df + 
-  geom_tippoint(aes(color=depth)) 
-
+identical(row.names(arc), row.names(bac) )
+identical(row.names(arc), row.names(fun) )
+identical(row.names(arc), row.names(all) )
 ```
 
 
 Calculating NMDS
+Generalizing,, ,beccause all the row names match in order, we can pick one to use for propogating row names
 
 ```{r}
-set.seed(13)
-NMDSdat<-metaMDS(OTU_dist,k=2) # k = 2 dimensions
-```
+NMDSdat_make <- function(df, rowwing) {
+  set.seed(13)
+  
+  # At 20 runs, fails to converge, 
+  #NMDSdat<-metaMDS(df,k=2) # k = 2 dimensions
+  # All fails to converge with 100 runs, so we'll increase to 200
+  #NMDSdat<-metaMDS(df,k=2, trymax = 100) # k = 2 dimensions
+  
+  NMDSdat<-metaMDS(df,k=2, trymax = 500) # k = 2 dimensions
 
-
-```{r}
-PDat<-data.frame(NMDS1=NMDSdat$points[,1],
+  PDat<-data.frame(NMDS1=NMDSdat$points[,1],
                  NMDS2=NMDSdat$points[,2],
-                 SampleID=row.names(bac))
+                 Phylogeny=row.names(rowwing))
+return(PDat)
+}
 
-PDat$depth = describe$depth
-
-PDat$Clearcut = describe$Clearcut
-PDat$Salvage = describe$Salvage
-PDat$Slope = describe$Slope
-
-qplot(x=NMDS1,y=NMDS2,colour=(Slope),alpha=I(0.6),data=PDat)+theme_bw()
 ```
 
+
+Calling NMDSdat_make
+
+```{r}
+NMDSdat_arc = NMDSdat_make(arc_nonan_bray[[1]], arc)
+NMDSdat_bac = NMDSdat_make(bac_nonan_bray[[1]], arc)
+NMDSdat_fun = NMDSdat_make(fun_nonan_bray[[1]], arc)
+
+NMDSdat_all = NMDSdat_make(all_nonan_bray[[1]], arc)
+
+# By depth
+
+# For bacteria
+NMDSdat_bac_depth10 = NMDSdat_make(bac_nonan_bray_depth10[[1]], arc[1:80,])
+NMDSdat_bac_depth20 = NMDSdat_make(bac_nonan_bray_depth20[[1]], arc[81:160,])
+
+
+# For all
+NMDSdat_all_depth10 = NMDSdat_make(all_nonan_bray_depth10[[1]], arc[1:80,])
+NMDSdat_all_depth20 = NMDSdat_make(all_nonan_bray_depth20[[1]], arc[81:160,])
+```
+
+
+We cann merge the NMDSdat dataframees with the describe df
+
+```{r}
+NMDSdat_arc = merge(NMDSdat_arc, describe, by = 'Phylogeny')
+NMDSdat_bac = merge(NMDSdat_bac, describe, by = 'Phylogeny')
+NMDSdat_fun = merge(NMDSdat_fun, describe, by = 'Phylogeny')
+
+NMDSdat_all = merge(NMDSdat_all, describe, by = 'Phylogeny')
+
+NMDSdat_bac_depth10 = merge(NMDSdat_bac_depth10, describe, by = 'Phylogeny')
+NMDSdat_bac_depth20 = merge(NMDSdat_bac_depth20, describe, by = 'Phylogeny')
+
+NMDSdat_all_depth10 = merge(NMDSdat_all_depth10, describe, by = 'Phylogeny')
+NMDSdat_all_depth20 = merge(NMDSdat_all_depth20, describe, by = 'Phylogeny')
+```
+
+Making a loop dissecting categorical features for microbial communities
+
+```{r}
+features = c('depth', 'No.Fires', 'Clearcut', 'Salvage')
+
+
+viz_cats <- function(df) {
+  
+for (i in features) {
+  print(qplot(x=NMDS1,y=NMDS2,color=as.factor(get(i)), alpha= I(0.6), data= df)+
+  stat_ellipse() + 
+  theme_bw()+
+   guides(color=guide_legend(title=i))+
+    ggtitle(deparse(substitute(df))))
+
+
+}
+}
+
+
+
+
+```
+
+Running viz_cats for all the NMDS dfs
+
+```{r}
+viz_cats(NMDSdat_arc)
+viz_cats(NMDSdat_bac)
+viz_cats(NMDSdat_fun)
+viz_cats(NMDSdat_all)
+
+viz_cats(NMDSdat_bac_depth10)
+viz_cats(NMDSdat_bac_depth20)
+
+viz_cats(NMDSdat_all_depth10)
+viz_cats(NMDSdat_all_depth20)
+```
+
+From the above, we determined:
+- Depth 10 vs 20 can make a big difference when comparing communities, especially bacterial ocmmunities
+--> Therefore we'll focus on the separated Bray-Curtis'
+
+  For Depth 10 and 20
+  - We see Clearcut 0 vs 1 overlaps however there is distinct clustering
+  
+We'll look at the continuous variables for these two to determine if their clustering is linked to a continuous soil indicator
+
+```{r}
+
+cont = c('Soil_fertility','TSD', 'Ammonium.Nitrogen', 'Nitrate.Nitrogen', 'Phosphorus.Colwell', 'Potassium.Colwell', 'Organic.Carbon', 'DTPA.Copper', 'DTPA.Iron','DTPA.Manganese',  'Exc.Magnesium','Slope', 'Elevation', 'pH.CaCl2.')
+
+
+viz_cont <- function(df) {
+  
+for (i in cont) {
+  print(ggplot(data = df, aes(NMDS1, NMDS2 )) + 
+  geom_point(aes(color=get(i), shape=as.factor(Clearcut), size=2, alpha=I(0.7) )) +
+  labs(color=i)+
+    ggtitle(deparse(substitute(df)))+
+  theme_bw())
+
+
+}
+}
+
+```
+
+```{r}
+viz_cont(NMDSdat_bac_depth10)
+viz_cont(NMDSdat_bac_depth20)
+```
+
+From above, we can see
+- pH seems to help explain the difference among clearcut type--> for both depths
+
+Making final figures--> We'll need to add legend back...
+
+```{r}
+a= ggplot(data = NMDSdat_bac_depth10, aes(NMDS1, NMDS2 )) + 
+  geom_point(aes(color=pH.CaCl2., shape=as.factor(Clearcut), size=2, alpha=I(0.7) )) +
+  xlim(c(-0.4,0.3))+
+  ylim(c(-0.25,0.2))+
+  theme_bw()+
+  theme(legend.position="none")
+
+b=ggplot(data = NMDSdat_bac_depth20, aes(NMDS1, NMDS2 )) + 
+  geom_point(aes(color=pH.CaCl2., shape=as.factor(Clearcut), size=2, alpha=I(0.7) )) +
+  xlim(c(-0.4,0.3))+
+  ylim(c(-0.25,0.2))+
+  theme_bw()+
+  theme(legend.position="none")
+
+plot_grid(a, b, labels = "AUTO", align='vh',vjust=1, scale = 1)
+```
 
 
 
