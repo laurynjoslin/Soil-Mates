@@ -150,7 +150,7 @@ theme_boxplot_one <- function (base_size =12, base_family = ""){
 
 ```{r}
 a <- ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen, fill = clearcut), outlier.shape = NA, alpha=0.25)+
+  geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen, fill = clearcut), alpha=0.25)+
   geom_jitter(aes(x = no_fires, y = Nitrate.Nitrogen, fill = clearcut), width=0.1, shape=21, color="black")+
   scale_fill_manual(labels = c('No','Yes'), values = clearcutpal)+
   theme_boxplot_one()+
@@ -239,7 +239,7 @@ g
 ## ADDING geom_jitter to see raw data on boxplots
 ```{r}
 h <- ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen, fill = Salvage), outlier.shape = NA, alpha=0.25)+
+  geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen, fill = Salvage), alpha=0.25)+
   geom_jitter(aes(x = no_fires, y = Nitrate.Nitrogen, fill = Salvage), width=0.1, shape=21, color="black")+
   scale_fill_manual(labels = c('No','Yes'), values = salvagepal)+
   theme_boxplot_one()+
