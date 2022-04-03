@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(vegan)
 library(tidyverse)
-library(ggpubr)  # used to add stats in plots 
+library(ggpubr)
 library(ggtree)
 library(vegan)
 library(ape)
@@ -110,7 +110,7 @@ tD20 <- t(tD20)
 Div2 <- diversity(tD20, index = "shannon", MARGIN = 1, base= exp(1))
 ```
 
-## T-test of diversity between 
+## T-test of diversity between depth
 ```{r}
 t.test(Div1, Div2)
 ```
@@ -157,8 +157,27 @@ two.way4 <- aov(Div ~ Salvage + Depth, data = EnQ1)
 summary(two.way4)
 two.way5 <- aov(Div ~ Disturbance_History + Depth, data = EnM)
 summary(two.way5)
-
 ```
+```{r}
+b_one.way <- aov(Microbial_diversity ~ as.factor(Depth), data = EnQ1)
+summary(b_one.way)
+
+btwo.way1 <- aov(Microbial_diversity ~ as.factor(No.Fires)*as.factor(Depth), data = EnQ1)
+summary(btwo.way1)
+
+btwo.way2 <- aov(Microbial_diversity ~ as.factor(TSD)*as.factor(Depth), data = EnQ1)
+summary(btwo.way2)
+
+btwo.way3 <- aov(Microbial_diversity ~ as.factor(Clearcut)*as.factor(Depth), data = EnQ1)
+summary(btwo.way3)
+
+btwo.way4 <- aov(Microbial_diversity ~ as.factor(Salvage)*as.factor(Depth), data = EnQ1)
+summary(btwo.way4)
+
+btwo.way5 <- aov(Microbial_diversity ~ Disturbance_History*as.factor(Depth), data = EnM)
+summary(btwo.way5)
+```
+
 
 #### - borrowed from logan
 ```{r}
@@ -192,7 +211,7 @@ EnM_mean <- EnM %>%
 ```{r}
 QP1 <- ggplot(EnM, aes(x=Depth, y=Div)) +
     geom_boxplot(aes(colour=I("black"), fill=Depth)) +  
-    labs(y="Alpha Diversity", 
+    labs(y="Shannon's Diversity", 
          x="Depth of sample",
          fill="Disturbance History") + 
   scale_x_discrete(labels=c("0-10cm", "20-30cm")) +
@@ -207,7 +226,102 @@ QP1 <- ggplot(EnM, aes(x=Depth, y=Div)) +
   scale_fill_manual(values = clearcutpal)
 QP1
 ```
-#### Adding in means 
+
+
+
+```{r}
+plot2 <- ggplot(EnM, aes(x = as.factor(No.Fires), y = Div )) +
+  stat_summary(aes(group = Depth, color = Depth, linetype = Depth), fun = mean, geom = "path", size =1) +
+  stat_summary(aes(color = Depth, shape = Depth), fun = mean,
+               geom = "errorbar", fun.max = function(x) mean(x) + sd(x),
+               fun.min = function(x) mean(x) - sd(x),  size =1, width=.25, position=position_dodge(width=0.03)) +
+  stat_summary(aes(color = Depth, shape = Depth), geom = "point",fun.y = "mean",size = 4) +
+  scale_shape_manual(name = "Group", values = c(18, 16)) +
+    xlab ('Number of Fire') +
+ ylab("Shannon's Diversity") +
+    theme_boxplot_one() +
+  guides(shape = FALSE, linetype = FALSE) +
+  theme(text = element_text(size = 14)) +
+    guides(colour = guide_legend(override.aes = list(shape = c(18, 16)), 'Depth')) + 
+  scale_colour_manual(values = fullpal, labels = c("0-10cm", "20-30cm"))
+plot2
+```
+
+
+#### Examing individual destuctive effects
+##### Number of fires plot
+```{r}
+plot1 <- ggplot(EnM, aes(x = as.factor(No.Fires), y = Div )) +
+  stat_summary(aes(group = Depth, color = Depth, linetype = Depth), fun = mean, geom = "path", size =1) +
+  stat_summary(aes(color = Depth, shape = Depth), fun = mean,
+               geom = "errorbar", fun.max = function(x) mean(x) + sd(x),
+               fun.min = function(x) mean(x) - sd(x),  size =1, width=.25, position=position_dodge(width=0.03)) +
+  stat_summary(aes(color = Depth, shape = Depth), geom = "point",fun.y = "mean",size = 4) +
+  scale_shape_manual(name = "Group", values = c(18, 16)) +
+    xlab ('Number of Fire') +
+  ylab("Shannon's Diversity") +
+    theme_boxplot_one() +
+  guides(shape = FALSE, linetype = FALSE) +
+  theme(text = element_text(size = 14)) +
+    guides(colour = guide_legend(override.aes = list(shape = c(18, 16)), 'Depth')) + 
+  scale_colour_manual(values = fullpal, labels = c("0-10cm", "20-30cm"))
+plot1
+```
+
+```{r}
+plot2 <- ggplot(EnM, aes(x = as.factor(Clearcut), y = Div )) +
+  stat_summary(aes(group = Depth, color = Depth, linetype = Depth), fun = mean, geom = "path", size =1) +
+  stat_summary(aes(color = Depth, shape = Depth), fun = mean,
+               geom = "errorbar", fun.max = function(x) mean(x) + sd(x),
+               fun.min = function(x) mean(x) - sd(x),  size =1, width=.25, position=position_dodge(width=0.03)) +
+  stat_summary(aes(color = Depth, shape = Depth), geom = "point",fun.y = "mean",size = 4) +
+  scale_shape_manual(name = "Group", values = c(18, 16)) +
+    xlab ('Clearcut') +
+  ylab("Shannon's Diversity") +
+    theme_boxplot_one() +
+  guides(shape = FALSE, linetype = FALSE) +
+  theme(text = element_text(size = 14)) +
+    guides(colour = guide_legend(override.aes = list(shape = c(18, 16)), 'Depth')) + 
+  scale_colour_manual(values = fullpal, labels = c("0-10cm", "20-30cm"))
+plot2
+```
+
+```{r}
+plot3 <- ggplot(EnM, aes(x = as.factor(Salvage), y = Div )) +
+  stat_summary(aes(group = Depth, color = Depth, linetype = Depth), fun = mean, geom = "path", size =1) +
+  stat_summary(aes(color = Depth, shape = Depth), fun = mean,
+               geom = "errorbar", fun.max = function(x) mean(x) + sd(x),
+               fun.min = function(x) mean(x) - sd(x),  size =1, width=.25, position=position_dodge(width=0.03)) +
+  stat_summary(aes(color = Depth, shape = Depth), geom = "point",fun.y = "mean",size = 4) +
+  scale_shape_manual(name = "Group", values = c(18, 16)) +
+    xlab ('Number of Fire') +
+   ylab("Shannon's Diversity") +
+    theme_boxplot_one() +
+  guides(shape = FALSE, linetype = FALSE) +
+  theme(text = element_text(size = 14)) +
+    guides(colour = guide_legend(override.aes = list(shape = c(18, 16)), 'Depth')) + 
+  scale_colour_manual(values = fullpal, labels = c("0-10cm", "20-30cm"))
+plot3
+```
+
+```{r}
+plot4 <- ggplot(EnM, aes(x = as.factor(TSD), y = Div )) +
+  stat_summary(aes(group = Depth, color = Depth, linetype = Depth), fun = mean, geom = "path", size =1) +
+  stat_summary(aes(color = Depth, shape = Depth), fun = mean,
+               geom = "errorbar", fun.max = function(x) mean(x) + sd(x),
+               fun.min = function(x) mean(x) - sd(x),  size =1, width=.25, position=position_dodge(width=0.03)) +
+  stat_summary(aes(color = Depth, shape = Depth), geom = "point",fun.y = "mean",size = 4) +
+  scale_shape_manual(name = "Group", values = c(18, 16)) +
+    xlab ('Time Since Disturbance (Years)') +
+  ylab("Shannon's Diversity") +
+    theme_boxplot_one() +
+  guides(shape = FALSE, linetype = FALSE) +
+  theme(text = element_text(size = 14)) +
+    guides(colour = guide_legend(override.aes = list(shape = c(18, 16)), 'Depth')) + 
+  scale_colour_manual(values = fullpal, labels = c("0-10cm", "20-30cm"))
+plot4
+```
+
 ```{r}
 EnM_mean2 <- EnM %>% 
   group_by(Disturbance_History) %>% 
@@ -215,92 +329,13 @@ EnM_mean2 <- EnM %>%
   ungroup()
 ```
 
-```{r}
-EnM_mean3 <- EnM %>% 
-  group_by(No.Fires,Depth) %>% 
-  summarize(average = mean(Div))
-```
-
-
-
-
-```{r}
-EnM$No.Fires <- as.character(EnM$No.Fires)
-QP2<- ggplot(EnM, aes(x=No.Fires, y=Div)) +
-    geom_boxplot(aes(colour=I("black"), fill= Depth)) +  
-   labs(y="Alpha Diversity", x="Number of Fires") + 
-        theme_boxplot_one() +
-  scale_fill_manual(values = fullpal) + 
-  geom_point(data = EnM_mean3, 
-             mapping = aes(x= No.Fires, y = average),
-             color="red") +
-   geom_line(data = EnM_mean3, 
-            mapping = aes(x = No.Fires, y = average, group=1)) + 
-  stat_compare_means(method = "anova", label.x= 0.6) # not right 
-QP2
-```
-
-
-
-#### Examing individual destuctive effects
-```{r}
-EnM$No.Fires <- as.character(EnM$No.Fires)
-QP2<- ggplot(EnM, aes(x=No.Fires, y=Div)) +
-    geom_boxplot(aes(colour=I("black"), fill= No.Fires)) +  
-    labs(y="Alpha Diversity", x="Number of Fires") + 
-        theme_boxplot_one() + 
-    stat_compare_means(method = "anova", label.x= 0.6) + # This needs to be double checked - I just typed anova but don't know if its running the proper stat
-   theme(legend.position = "none") +
-  scale_fill_manual(values = fullpal)
-QP2
-```
-
-```{r}
-EnM2 <- EnM
-EnM2$TSD <- as.factor(EnM2$TSD)
-QP3 <- ggplot(EnM2, aes(x= TSD , y=Div)) +
-    geom_boxplot(aes(colour=I("black"), fill= TSD)) +  
-    labs(y="Alpha Diversity", x="Time Since Destuction") + 
-  theme_boxplot_one() +
-    theme(legend.position = "none") +
-  scale_fill_manual(values = fullpal) + 
-  stat_compare_means(method = "anova", label.x= 0.6) # This needs to be double checked - I just typed anova but don't know if its running the proper stat
-QP3
-```
-
-```{r}
-EnM$Clearcut <- as.character(EnM$Clearcut)
-QP4<- ggplot(EnM, aes(x=Clearcut, y=Div)) +
-    geom_boxplot(aes(colour=I("black"), fill= Clearcut)) +  
-    labs(y="Alpha Diversity", fill="Number of Fires") + 
-  stat_compare_means(method = "t.test", label.x= 0.5) +
-  theme_boxplot_one() + 
-    theme(legend.position = "none") +
-  scale_fill_manual(values = clearcutpal)
-QP4
-```
-
-```{r}
-EnM$Salvage <- as.character(EnM$Salvage)
-QP5<- ggplot(EnM, aes(x=Salvage, y=Div)) +
-    geom_boxplot(aes(colour=I("black"), fill= Depth)) +  
-    labs(y="Alpha Diversity", fill="Number of Fires") + 
-  stat_compare_means(method = "t.test", label.x= 0.5) +
-    theme_boxplot_one() +
-  scale_fill_manual(values = clearcutpal) +
-    theme(legend.position = "none") 
-QP5
-```
-
-
-# By disturbance history
+# By disturbance history - still needs fixing
 ```{r}
 QP6<- ggplot(EnM, aes(x=reorder(Disturbance_History,-TSD), y=Div)) +
     geom_boxplot(aes(colour=I("black"), fill=Disturbance_History)) +  
     labs(y="Alpha Diversity", 
          x="Disturbance History",
          fill="Disturbance History") + 
-  
    geom_point(data = EnM_mean2, 
              mapping = aes(x= Disturbance_History, y = average),
              color="red") +
@@ -317,12 +352,14 @@ grid.arrange(QP1, arrangeGrob(QP2, QP3, ncol=2), arrangeGrob(QP4, QP5, ncol=2), 
 ```
 
 ```{r}
-layout <- rbind(c(1,2), c(3,4))
+layout <- rbind(c(1,2), c(3,4)) # probably could be fixed up
 gt <- grid.arrange(                                    
-             QP2, QP3,
-             QP4, QP5,
+             plot1, plot2,
+             plot3, plot4,
              ncol = 2, nrow = 6, 
              layout_matrix = layout,
             newpage = TRUE)
 ```
+
+
 
