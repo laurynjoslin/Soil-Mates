@@ -145,6 +145,22 @@ for (i in 1:nrow(EnM)) {
 }
 unique(EnM$Disturbance_History) #checks unique to ensure I got all the every history
 ```
+Stats for individual varibles
+```{r}
+two.way1 <- aov(Div ~ No.Fires + Depth, data = EnQ1)
+summary(two.way1)
+two.way2 <- aov(Div ~ TSD + Depth, data = EnQ1)
+summary(two.way2)
+two.way3 <- aov(Div ~ Clearcut + Depth, data = EnQ1)
+summary(two.way3)
+two.way4 <- aov(Div ~ Salvage + Depth, data = EnQ1)
+summary(two.way4)
+two.way5 <- aov(Div ~ Disturbance_History + Depth, data = EnM)
+summary(two.way5)
+
+```
+
+#### - borrowed from logan
 ```{r}
 theme_boxplot_one <- function (base_size =12, base_family = ""){
   theme_classic(base_size = base_size, base_family = base_family) %+replace%
@@ -199,6 +215,33 @@ EnM_mean2 <- EnM %>%
   ungroup()
 ```
 
+```{r}
+EnM_mean3 <- EnM %>% 
+  group_by(No.Fires,Depth) %>% 
+  summarize(average = mean(Div))
+```
+
+
+
+
+```{r}
+EnM$No.Fires <- as.character(EnM$No.Fires)
+QP2<- ggplot(EnM, aes(x=No.Fires, y=Div)) +
+    geom_boxplot(aes(colour=I("black"), fill= Depth)) +  
+   labs(y="Alpha Diversity", x="Number of Fires") + 
+        theme_boxplot_one() +
+  scale_fill_manual(values = fullpal) + 
+  geom_point(data = EnM_mean3, 
+             mapping = aes(x= No.Fires, y = average),
+             color="red") +
+   geom_line(data = EnM_mean3, 
+            mapping = aes(x = No.Fires, y = average, group=1)) + 
+  stat_compare_means(method = "anova", label.x= 0.6) # not right 
+QP2
+```
+
+
+
 #### Examing individual destuctive effects
 ```{r}
 EnM$No.Fires <- as.character(EnM$No.Fires)
@@ -240,7 +283,7 @@ QP4
 ```{r}
 EnM$Salvage <- as.character(EnM$Salvage)
 QP5<- ggplot(EnM, aes(x=Salvage, y=Div)) +
-    geom_boxplot(aes(colour=I("black"), fill= Salvage)) +  
+    geom_boxplot(aes(colour=I("black"), fill= Depth)) +  
     labs(y="Alpha Diversity", fill="Number of Fires") + 
   stat_compare_means(method = "t.test", label.x= 0.5) +
     theme_boxplot_one() +
@@ -275,7 +318,7 @@ grid.arrange(QP1, arrangeGrob(QP2, QP3, ncol=2), arrangeGrob(QP4, QP5, ncol=2), 
 
 ```{r}
 layout <- rbind(c(1,2), c(3,4))
-gt <- grid.arrange(                                    # bar plot spanning two columns
+gt <- grid.arrange(                                    
              QP2, QP3,
              QP4, QP5,
              ncol = 2, nrow = 6, 
