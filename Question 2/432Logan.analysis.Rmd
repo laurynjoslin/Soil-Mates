@@ -146,7 +146,7 @@ theme_boxplot_one <- function (base_size =12, base_family = ""){
 
 #Picking the best graphs from the exploring, and making them look publication ready
 
-## ADDING outlier.alpha =0.5 to see if outlier may be one point or more than one point
+## ADDING geom_jitter to see raw data on boxplots
 
 ```{r}
 a <- ggplot(en)+
@@ -236,7 +236,7 @@ salvage logged?")
 g
 ```
 
-## ADDING outlier.alpha =0.5 to see if outlier may be one point or more than one point
+## ADDING geom_jitter to see raw data on boxplots
 ```{r}
 h <- ggplot(en)+
   geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen, fill = Salvage), outlier.shape = NA, alpha=0.25)+
