@@ -3,13 +3,23 @@ title: "Soil-Mates"
 output: html_document
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
 #### Packages
 ```{r}
 library(dplyr)
 library(vegan)
 library(tidyverse)
-library(ggpubr) # used to adds stats in plots 
+library(ggpubr)  # used to add stats in plots 
+library(ggtree)
+library(vegan)
+library(ape)
+library(ggplot2)
+library(gridExtra)
 ```
+
 #### Importing all at once
 ```{r}
 temp <- list.files("./Data",pattern="*.csv", full.names = T) #creates an object that contains a string of file names with directory so they can be located
@@ -133,7 +143,26 @@ for (i in 1:nrow(EnM)) {
   EnM$Disturbance_History[i] <- "1939/1983F/2009CC"
   } 
 }
-unique(EnM$Disturbance_History) #checks unqiue to ensure I got all the every history
+unique(EnM$Disturbance_History) #checks unique to ensure I got all the every history
+```
+```{r}
+theme_boxplot_one <- function (base_size =12, base_family = ""){
+  theme_classic(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      axis.text = element_text(colour = "black"),
+      axis.title.x = element_text(size=12),
+      axis.text.x = element_text(size=9),
+      axis.title.y = element_text(size=12, angle=90),
+      axis.text.y = element_text(size=9),
+      axis.ticks = element_blank(),
+      panel.background = element_rect(fill = "white"),
+      panel.border = element_blank(),
+      plot.title= element_text(face="bold", size=24)
+    )
+}
+clearcutpal <- c("#7f4f24", "#718355")
+salvagepal <- c("#e9972d", "#15616d")
+fullpal <- c(clearcutpal, salvagepal)
 ```
 
 #### Plot of diversity by depth
@@ -145,34 +174,23 @@ EnM_mean <- EnM %>%
 ```
 
 ```{r}
-ggplot(EnM, aes(x=Depth, y=Div)) +
+QP1 <- ggplot(EnM, aes(x=Depth, y=Div)) +
     geom_boxplot(aes(colour=I("black"), fill=Depth)) +  
     labs(y="Alpha Diversity", 
          x="Depth of sample",
          fill="Disturbance History") + 
   scale_x_discrete(labels=c("0-10cm", "20-30cm")) +
-        theme_classic() + 
+        theme_boxplot_one() + 
   geom_point(data = EnM_mean, 
              mapping = aes(x= Depth, y = average),
              color="red") +
    geom_line(data = EnM_mean, 
             mapping = aes(x = Depth, y = average, group=1)) + 
-  stat_compare_means(method = "t.test", label.x= 1.5)
-
+  stat_compare_means(method = "t.test", label.x= 0.5) + 
+  theme(legend.position = "none") +
+  scale_fill_manual(values = clearcutpal)
+QP1
 ```
-
-####
-```{r}
-ggplot(EnM, aes(x=Disturbance_History, y=Div)) +
-    geom_boxplot(aes(colour=I("black"), fill=Disturbance_History)) +  
-    labs(y="Alpha Diversity", 
-         x="Depth of sample",
-         fill="Disturbance History") + 
-  #scale_x_discrete(labels=c("0-10cm", "20-30cm")) +
-  geom_hline(yintercept = mean(EnM$Disturbance_History), color="blue") +
-        theme_classic()
-```
-
 #### Adding in means 
 ```{r}
 EnM_mean2 <- EnM %>% 
@@ -181,57 +199,87 @@ EnM_mean2 <- EnM %>%
   ungroup()
 ```
 
-```{r}
-ggplot(EnM, aes(x=reorder(Disturbance_History,-TSD), y=Div)) +
-    geom_boxplot(aes(colour=I("black"), fill=Disturbance_History)) +  
-    labs(y="Alpha Diversity", 
-         x="Disturbance History",
-         fill="Disturbance History") + 
-  #scale_x_discrete(labels=c("0-10cm", "20-30cm")) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  geom_hline(yintercept = mean(EnM$Disturbance_History), color="blue") +
-   geom_point(data = EnM_mean2, 
-             mapping = aes(x= Disturbance_History, y = average),
-             color="red") +
-   geom_line(data = EnM_mean2, 
-            mapping = aes(x = Disturbance_History, y = average, group=1))
-```
-
 #### Examing individual destuctive effects
 ```{r}
 EnM$No.Fires <- as.character(EnM$No.Fires)
-ggplot(EnM, aes(x=No.Fires, y=Div)) +
+QP2<- ggplot(EnM, aes(x=No.Fires, y=Div)) +
     geom_boxplot(aes(colour=I("black"), fill= No.Fires)) +  
-    labs(y="Alpha Diversity", fill="Number of Fires") + 
-        theme_classic() + 
-    stat_compare_means(method = "anova", label.x= 1.5) # This needs to be double checked - I just typed anova but don't know if its running the proper stat
+    labs(y="Alpha Diversity", x="Number of Fires") + 
+        theme_boxplot_one() + 
+    stat_compare_means(method = "anova", label.x= 0.6) + # This needs to be double checked - I just typed anova but don't know if its running the proper stat
+   theme(legend.position = "none") +
+  scale_fill_manual(values = fullpal)
+QP2
 ```
 
 ```{r}
 EnM2 <- EnM
-EnM2$TSD <- as.character(EnM2$TSD)
-ggplot(EnM2, aes(x=TSD, y=Div)) +
+EnM2$TSD <- as.factor(EnM2$TSD)
+QP3 <- ggplot(EnM2, aes(x= TSD , y=Div)) +
     geom_boxplot(aes(colour=I("black"), fill= TSD)) +  
-    labs(y="Alpha Diversity", fill="Number of Fires") + 
-        theme_classic() + 
-  stat_compare_means(method = "anova", label.x= 1.5) # This needs to be double checked - I just typed anova but don't know if its running the proper stat
+    labs(y="Alpha Diversity", x="Time Since Destuction") + 
+  theme_boxplot_one() +
+    theme(legend.position = "none") +
+  scale_fill_manual(values = fullpal) + 
+  stat_compare_means(method = "anova", label.x= 0.6) # This needs to be double checked - I just typed anova but don't know if its running the proper stat
+QP3
 ```
 
 ```{r}
 EnM$Clearcut <- as.character(EnM$Clearcut)
-ggplot(EnM, aes(x=Clearcut, y=Div)) +
+QP4<- ggplot(EnM, aes(x=Clearcut, y=Div)) +
     geom_boxplot(aes(colour=I("black"), fill= Clearcut)) +  
     labs(y="Alpha Diversity", fill="Number of Fires") + 
-        theme_classic() +
-  stat_compare_means(method = "t.test", label.x= 1.5)
+  stat_compare_means(method = "t.test", label.x= 0.5) +
+  theme_boxplot_one() + 
+    theme(legend.position = "none") +
+  scale_fill_manual(values = clearcutpal)
+QP4
 ```
 
 ```{r}
 EnM$Salvage <- as.character(EnM$Salvage)
-ggplot(EnM, aes(x=Salvage, y=Div)) +
+QP5<- ggplot(EnM, aes(x=Salvage, y=Div)) +
     geom_boxplot(aes(colour=I("black"), fill= Salvage)) +  
     labs(y="Alpha Diversity", fill="Number of Fires") + 
-        theme_classic() +
-  stat_compare_means(method = "t.test", label.x= 1.5)
+  stat_compare_means(method = "t.test", label.x= 0.5) +
+    theme_boxplot_one() +
+  scale_fill_manual(values = clearcutpal) +
+    theme(legend.position = "none") 
+QP5
+```
+
+
+# By disturbance history
+```{r}
+QP6<- ggplot(EnM, aes(x=reorder(Disturbance_History,-TSD), y=Div)) +
+    geom_boxplot(aes(colour=I("black"), fill=Disturbance_History)) +  
+    labs(y="Alpha Diversity", 
+         x="Disturbance History",
+         fill="Disturbance History") + 
+  
+   geom_point(data = EnM_mean2, 
+             mapping = aes(x= Disturbance_History, y = average),
+             color="red") +
+   geom_line(data = EnM_mean2, 
+            mapping = aes(x = Disturbance_History, y = average, group=1)) + 
+  theme_boxplot_one() +
+  theme(legend.position = "none", axis.text.x = element_text(angle = 15, vjust = 1, hjust=1)) +
+      stat_compare_means(method = "anova", label.x= 1.5) # This needs to be double checked - I just typed anova but don't know if its running the proper stat
+QP6
+```
+
+```{r}
+grid.arrange(QP1, arrangeGrob(QP2, QP3, ncol=2), arrangeGrob(QP4, QP5, ncol=2), QP6, nrow = 4)
+```
+
+```{r}
+layout <- rbind(c(1,2), c(3,4))
+gt <- grid.arrange(                                    # bar plot spanning two columns
+             QP2, QP3,
+             QP4, QP5,
+             ncol = 2, nrow = 6, 
+             layout_matrix = layout,
+            newpage = TRUE)
 ```
 
