@@ -8,9 +8,9 @@ output: html_document
 library(dplyr)
 library(vegan)
 library(tidyverse)
-library(ggpubr)
+library(ggpubr) # used to adds stats in plots 
 ```
-#### Importing all at one
+#### Importing all at once
 ```{r}
 temp <- list.files("./Data",pattern="*.csv", full.names = T) #creates an object that contains a string of file names with directory so they can be located
 Dat <- list() # creates an empty vector used in the for loop
@@ -138,8 +138,13 @@ unique(EnM$Disturbance_History) #checks unqiue to ensure I got all the every his
 
 #### Plot of diversity by depth
 ```{r}
-depth_mean <- data.frame(mean(Div1), mean(Div2))
+EnM_mean <- EnM %>% 
+  group_by(Depth) %>% 
+  summarize(average = mean(Div)) %>%
+  ungroup()
+```
 
+```{r}
 ggplot(EnM, aes(x=Depth, y=Div)) +
     geom_boxplot(aes(colour=I("black"), fill=Depth)) +  
     labs(y="Alpha Diversity", 
@@ -147,31 +152,86 @@ ggplot(EnM, aes(x=Depth, y=Div)) +
          fill="Disturbance History") + 
   scale_x_discrete(labels=c("0-10cm", "20-30cm")) +
         theme_classic() + 
-  geom_line()
+  geom_point(data = EnM_mean, 
+             mapping = aes(x= Depth, y = average),
+             color="red") +
+   geom_line(data = EnM_mean, 
+            mapping = aes(x = Depth, y = average, group=1)) + 
+  stat_compare_means(method = "t.test", label.x= 1.5)
+
 ```
 
+####
 ```{r}
-ggplot(EnM, aes(x=Depth, y=Div)) +
+ggplot(EnM, aes(x=Disturbance_History, y=Div)) +
     geom_boxplot(aes(colour=I("black"), fill=Disturbance_History)) +  
     labs(y="Alpha Diversity", 
          x="Depth of sample",
          fill="Disturbance History") + 
-  scale_x_discrete(labels=c("0-10cm", "20-30cm")) +
+  #scale_x_discrete(labels=c("0-10cm", "20-30cm")) +
   geom_hline(yintercept = mean(EnM$Disturbance_History), color="blue") +
         theme_classic()
 ```
 
+#### Adding in means 
 ```{r}
-EnM$No.Fires <- as.character(EnM$No.Fires)
-ggplot(EnM, aes(x=No.Fires, y=Div)) +
-    geom_boxplot(aes(colour=I("black"), fill= Depth)) +  
-    labs(y="Alpha Diversity", fill="Number of Fires") + 
-        theme_classic()
+EnM_mean2 <- EnM %>% 
+  group_by(Disturbance_History) %>% 
+  summarize(average = mean(Div)) %>%
+  ungroup()
 ```
 
 ```{r}
-EnM$TSD <- as.character(EnM$TSD)
+ggplot(EnM, aes(x=reorder(Disturbance_History,-TSD), y=Div)) +
+    geom_boxplot(aes(colour=I("black"), fill=Disturbance_History)) +  
+    labs(y="Alpha Diversity", 
+         x="Disturbance History",
+         fill="Disturbance History") + 
+  #scale_x_discrete(labels=c("0-10cm", "20-30cm")) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  geom_hline(yintercept = mean(EnM$Disturbance_History), color="blue") +
+   geom_point(data = EnM_mean2, 
+             mapping = aes(x= Disturbance_History, y = average),
+             color="red") +
+   geom_line(data = EnM_mean2, 
+            mapping = aes(x = Disturbance_History, y = average, group=1))
+```
 
+#### Examing individual destuctive effects
+```{r}
+EnM$No.Fires <- as.character(EnM$No.Fires)
+ggplot(EnM, aes(x=No.Fires, y=Div)) +
+    geom_boxplot(aes(colour=I("black"), fill= No.Fires)) +  
+    labs(y="Alpha Diversity", fill="Number of Fires") + 
+        theme_classic() + 
+    stat_compare_means(method = "anova", label.x= 1.5) # This needs to be double checked - I just typed anova but don't know if its running the proper stat
+```
 
+```{r}
+EnM2 <- EnM
+EnM2$TSD <- as.character(EnM2$TSD)
+ggplot(EnM2, aes(x=TSD, y=Div)) +
+    geom_boxplot(aes(colour=I("black"), fill= TSD)) +  
+    labs(y="Alpha Diversity", fill="Number of Fires") + 
+        theme_classic() + 
+  stat_compare_means(method = "anova", label.x= 1.5) # This needs to be double checked - I just typed anova but don't know if its running the proper stat
+```
+
+```{r}
+EnM$Clearcut <- as.character(EnM$Clearcut)
+ggplot(EnM, aes(x=Clearcut, y=Div)) +
+    geom_boxplot(aes(colour=I("black"), fill= Clearcut)) +  
+    labs(y="Alpha Diversity", fill="Number of Fires") + 
+        theme_classic() +
+  stat_compare_means(method = "t.test", label.x= 1.5)
+```
+
+```{r}
+EnM$Salvage <- as.character(EnM$Salvage)
+ggplot(EnM, aes(x=Salvage, y=Div)) +
+    geom_boxplot(aes(colour=I("black"), fill= Salvage)) +  
+    labs(y="Alpha Diversity", fill="Number of Fires") + 
+        theme_classic() +
+  stat_compare_means(method = "t.test", label.x= 1.5)
 ```
 
