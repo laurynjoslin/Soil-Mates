@@ -40,7 +40,7 @@ Together all members of Soil mates will answer subquestion C by testing the corr
 
 ____
 
-Flowchart:
+Diagram Outlining our Workflow:
 
 <img width="605" alt="flowchart" src="https://user-images.githubusercontent.com/94632840/161470808-242a9b8d-27df-4858-9494-206a49694a49.png">
 
