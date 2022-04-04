@@ -114,6 +114,8 @@ Div2 <- diversity(tD20, index = "shannon", MARGIN = 1, base= exp(1))
 ```{r}
 t.test(Div1, Div2)
 ```
+
+#### Creates a new environmental table and adds diversity data to it
 ```{r}
 EnQ1 <- En
 EnQ1$Div <- c(Div1, Div2)
@@ -187,6 +189,7 @@ EnM_mean <- EnM %>%
   ungroup()
 ```
 
+#### First plot comparing alpha diverisity between depths
 ```{r}
 QP1 <- ggplot(EnM, aes(x=Depth, y=Div)) +
     geom_boxplot(aes(colour=I("black"), fill=Depth)) +  
@@ -207,21 +210,6 @@ QP1
 ```
 
 #### Examing individual disturbance types effects
-```{r}
-plot1 <- ggplot(EnM, aes(x=Depth, y=Div)) + # Makes a plot with a legend
-    geom_boxplot(aes(colour=I("black"), fill=Depth)) +
-  theme_boxplot_one() + 
-  scale_fill_manual(values = clearcutpal)
-extract_legend <- function(my_ggp) { #Custom function to extract just legends
-  step1 <- ggplot_gtable(ggplot_build(my_ggp))
-  step2 <- which(sapply(step1$grobs, function(x) x$name) == "guide-box")
-  step3 <- step1$grobs[[step2]]
-  return(step3)
-}
-# Apply user-defined function to extract legend for us in a mutliplot
-shared_legend <- extract_legend(plot1)
-```
-
 ```{r}
 plot2 <- ggplot(EnM, aes(x = as.factor(No.Fires), y = Div )) +
   stat_summary(aes(group = Depth, color = Depth, linetype = Depth), fun = mean, geom = "path", size =1) +
@@ -292,13 +280,30 @@ plot5 <- ggplot(EnM, aes(x = as.factor(TSD), y = Div )) +
   scale_colour_manual(values = fullpal, labels = c("0-10cm", "20-30cm"))
 ```
 
+####creates a dummy plot so that grid figure can have a common legend
+```{r}
+plotx <- ggplot(EnM, aes(x=Depth, y=Div)) + # Makes a plot with a legend
+    geom_boxplot(aes(colour=I("black"), fill=Depth)) +
+  theme_boxplot_one() + 
+  scale_fill_manual(values = clearcutpal)
+extract_legend <- function(my_ggp) { #Custom function to extract just legends
+  step1 <- ggplot_gtable(ggplot_build(my_ggp))
+  step2 <- which(sapply(step1$grobs, function(x) x$name) == "guide-box")
+  step3 <- step1$grobs[[step2]]
+  return(step3)
+}
+# Apply user-defined function to extract legend for us in a mutliplot
+shared_legend <- extract_legend(plot1)
+```
 
+#### creates a multiplot with all disturbance factor plots
 ```{r}
 PlotB<- grid.arrange( arrangeGrob(plot2, plot3, plot4, plot5, ncol=2), 
                   shared_legend, nrow = 2, heights = c(5, 1))
              
 ```
 
+#### Codes means based off of Disturbance_Histories
 ```{r}
 EnM_mean2 <- EnM %>% 
   group_by(Disturbance_History) %>% 
@@ -306,7 +311,7 @@ EnM_mean2 <- EnM %>%
   ungroup()
 ```
 
-# By disturbance history - still needs fixing
+#### Diversity by disturbance histories
 ```{r}
 QP6<- ggplot(EnM, aes(x=reorder(Disturbance_History,-TSD), y=Div)) +
     geom_boxplot(aes(colour=I("black"), fill=Disturbance_History)) +  
@@ -324,14 +329,16 @@ QP6<- ggplot(EnM, aes(x=reorder(Disturbance_History,-TSD), y=Div)) +
 QP6
 ```
 
+#### Creates a final multi plot
 ```{r}
-PLOT21<-grid.arrange(QP1, PlotB, QP6, ncol=1, nrow=3, left = text_grob("Shannon's Diversity", size=20, rot=90))
+PlotFin<-grid.arrange(QP1, PlotB, QP6, ncol=1, nrow=3, left = text_grob("Shannon's Diversity", size=20, rot=90))
 ```
 
+#### Creates and saves a .pdf of the final plot that is properly sized
 ```{r}
 pdf("Question1Plots.pdf") 
 
-ggsave( "Question1Plots.pdf", plot=PLOT21, width =25, height = 25, units = "cm")
+ggsave( "Question1Plots.pdf", plot=PlotFin, width =30, height = 30, units = "cm")
 ```
 
       
