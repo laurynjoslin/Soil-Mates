@@ -4,17 +4,14 @@ output: html_notebook
 ---
 
 
-## Background
-- a little about destructive forces/ soil health --> I can write this later
---> for a site comparison= use all 3 
+## QUESTION 3: Can we associate changes in microbial communities with soil composition?
 
-Addressing Question 1: Are destructive forces associated with decreasing microbial diversity? 
-- What kind of disturbances impact beta diversity the greatest?
-
+- We are interested in how community level diversity changes when considering destructive events and soil compositions
+- Primarily, we are looking for how tree branche and points cluster
 
 ### Preprocessing
 
-Loading in packages 
+Loading in all the packages we'll require
 
 ```{r}
 library(tidyr)
@@ -27,58 +24,61 @@ library(vegan)
 library(cowplot)
 library(tidyverse)
 library(data.table)
+library(ggpubr)
+library(ggtext)
 ```
 
+Searching for the OTU table .csv files
 
 ```{r}
+# We initialize the variable temp
 temp =0
-temp <- list.files("../Data",pattern="Dryad_Microbial_OTU+.*csv", full.names = T) #creates an object that contains a string of file names with directory so they can be located
 
-# Initializing list
+# We fill temp with a list of the files which have the string pattern. 
+  # We use a wild card (*) in order to allow generality (depths and archaea, bacteria and fungi)
+temp <- list.files("../Data",pattern="Dryad_Microbial_OTU+.*csv", full.names = T)
+
+# Initializing Dat which will hold all the dataframes
 Dat <- c()
 ```
 
-```{r}
-for (i in seq_along(temp)) { # creates a list (I dont know if this is the right term) of dataframes
-  Dat[[i]] <- read.csv(
-    file = temp[[i]]
-  )
-}
-```
-
-
+Retrieving the dataframes using our temp list
 
 ```{r}
-for (i in seq_along(temp)) { 
-  print(temp[i])
-  data.frame(assign(sub(".csv", "",sub("../Data/Dryad_Microbial_OTU_Table*", "", temp[i])), data.frame(Dat[i])))
+# Loops through temp, reads .csv into Dat.
+for (i in seq_along(temp)) {
+  Dat[[i]] <- read.csv(file = temp[[i]])
   
+  # Each item in Dat is pulled out as it's own dataframe. We use sub and assign to make unique names for these dataframes
+  data.frame(assign(sub(".csv", "",sub("../Data/Dryad_Microbial_OTU_Table*", "", temp[i])), data.frame(Dat[i])))
+
 }
 ```
 
-
-Removal of unncessary columns by names, 
+The fungi OTU tables have columns which group the Families by known function. For our purposes, we won't be needing them, therefore we dropped them.
 
 ```{r}
 s_10_Fungi <- subset(s_10_Fungi, select = -c(Trophic.Mode, Guild, Confidence.Ranking))
 s_20_Fungi <- subset(s_20_Fungi, select = -c(Trophic.Mode, Guild, Confidence.Ranking))
 ```
 
-
-Making all column names upper case in order to standardize
+In order to allow the merging of different types of microbes, we need to standardize the column names. We created the custom function,upper, in order to capitalize all the column names. 
 
 ```{r}
+# Input: The dataframe
 upper <- function(df) {
+  
+  # Loops through all the column names
 for( i in colnames(df)){
+  # Uses the toupper function to capitalize the column name we're looping through (overwrites)
     colnames(df)[which(colnames(df)==i)] = toupper(i)
 }
+  # Returns the dataframe
     return (df)
-  
 }
-
 ```
 
-Calling uppers function
+Calling uppers function for all our OTU tables
 
 ```{r}
 s_10_Archaea = upper(s_10_Archaea)
@@ -89,11 +89,12 @@ s_10_Fungi = upper(s_10_Fungi)
 s_20_Fungi = upper(s_20_Fungi)
 ```
 
-
-We'll make a columnn that holds the entire phylogeny at the Family
-** NEEDS TO BE GENERALIZED
+Bowd, et al, (2020) preprocessed the data using UNITE and Greengenes, up to the Family level. This resulted multiple OTU counts which are non-unique, and can be agglomerated. In order to do this, we pasted the Phyla, class, order and Family names for each row. 
 
 ```{r}
+# Interestingly, only the s_10_Archaea table has a unique naming system for Phylum
+colnames(s_10_Archaea)[colnames(s_10_Archaea) == 'PHYLUM'] <- 'PHYLA'
+
 s_10_Archaea$Phylogeny <- paste0(s_10_Archaea$PHYLA, s_10_Archaea$CLASS, s_10_Archaea$ORDER, s_10_Archaea$FAMILY, sep = "")
 s_20_Archaea$Phylogeny <- paste0(s_20_Archaea$PHYLA, s_20_Archaea$CLASS, s_20_Archaea$ORDER, s_20_Archaea$FAMILY, sep = "")
 
@@ -104,43 +105,23 @@ s_10_Fungi$Phylogeny <- paste0(s_10_Fungi$PHYLA, s_10_Fungi$CLASS, s_10_Fungi$OR
 s_20_Fungi$Phylogeny <- paste0(s_20_Fungi$PHYLA, s_20_Fungi$CLASS, s_20_Fungi$ORDER, s_20_Fungi$FAMILY, sep = "")
 ```
 
-Renaming the Phylum columnn
+In preparation for merging different depths, we need unique columns names for each site. We created a custom function, changenames, which uses sub to add the depth, one of the inputs.
 
 ```{r}
-colnames(s_10_Archaea)[colnames(s_10_Archaea) == 'PHYLUM'] <- 'PHYLA'
-```
-
-
-```{r}
-dfs = list(s_10_Archaea, s_20_Archaea, s_10_Bacteria,s_20_Bacteria,s_10_Fungi,s_20_Fungi)
-
-dfs_new <- lapply(dfs, function(x) transform(x, Phylogeny = paste(PHYLA,CLASS,ORDER,FAMILY,sep=":")))
-
-# makee into function or loop...
-
-s_10_Archaea = dfs_new[[1]]
-s_20_Archaea = dfs_new[[2]]
-s_10_Bacteria = dfs_new[[3]]
-s_20_Bacteria = dfs_new[[4]]
-s_10_Fungi = dfs_new[[5]]
-s_20_Fungi = dfs_new[[6]]
-```
-
-
-Making a function that removes the X prior to sample names and adding the "depth" of the sample
-
-```{r}
+# Input: dataframe and depth
 changenames <- function(df, depth) {
+  # Loops through all the columns
 for ( col in 1:ncol(df)){
+  # Adds the depth before the X character
     colnames(df)[col] <-  sub("X", depth, colnames(df)[col])
     
 }
+  # Returns the dataframe
   return (df)
 }
 ```
 
-Applying the functions, overwrites s_10_Archaea
-
+Calling changenames function for all our OTU tables
 
 ```{r}
 s_10_Archaea = changenames(s_10_Archaea, 'depth10_')
@@ -153,21 +134,27 @@ s_10_Fungi = changenames(s_10_Fungi, 'depth10_')
 s_20_Fungi = changenames(s_20_Fungi, 'depth20_')
 ```
 
-In cases where the Phylogeny is the same across multiple rows, we will sum them
+As mentioned, there are a number of non-unique phylogenies, likely because of varying resolution upon using the reference. Therefore, we created a custom function, groupby_ing, to groupby unique phylogenies and to sum across the units.
 
 ```{r}
+# Input: dataframe
 groupby_ing <- function(df) {
   
+  # Uses dplyr functions
   df <- df %>% 
+    # Groups by "complete" Phylogeny 
       group_by(Phylogeny) %>%
+    # Row-wise sum of units
   summarise_if(is.numeric, sum) %>% 
+    # Removal of the Cluster column since we won't need it
   select (-CLUSTER)
+  # Returns the dataframe
   return (df)
 
 }
 ```
 
-Calling the agglomeration function for all the tables
+Calling groupby_ing function for all our OTU tables
 
 ```{r}
 s_10_Archaea_agglom = groupby_ing(s_10_Archaea)
@@ -180,11 +167,11 @@ s_10_Fungi_agglom = groupby_ing(s_10_Fungi)
 s_20_Fungi_agglom = groupby_ing(s_20_Fungi)
 ```
 
+Prep for a Validation check: How many different phylogenies are present?
 
+- Among each type of microbe (archaea, bacteria and fungi), we know the microbes found may be different at different depths. 
+- Once we merge, we'll check if the number of unique phylogenies match
 
-Checking the dimensions to see how different the number of phylogenies are
-- the 0-10cm depth OTU table had more unique phylognies compareed to the 20-30cm OTU table
-- Both have the same number of samples
 
 ```{r}
 # For archaea
@@ -206,20 +193,21 @@ dim(s_20_Fungi_agglom)
 length(unique(c(s_10_Fungi_agglom$Phylogeny, s_20_Fungi_agglom$Phylogeny)))
 ```
 
-We're going to transpose the tables now--> need the column names--> use function..!!! STOPPED HEREE...
-
+In order to conduct diversity analysis (Phylogenetic trees and Bray-Curtis), we'll need to transpose all our OTU tables, where phylogenies are the column. Therefore, we created a custom function, transposing, to transpose the OTU tables. 
 
 ```{r}
+# Input: Dataframe
 transposing <- function(df) {
   
+  # Transposing the dataframe on the Phylogeny column, site IDs are now under the column name, Phylogeny.
 df = transpose(setDT(df), make.names = 'Phylogeny', keep.names = 'Phylogeny')
   
+  # Returns the dataframe
   return (df)
-
 }
 ```
 
-Calling transposing function
+Calling groupby_ing function for all our agglomerated OTU tables
 
 ```{r}
 s_10_Archaea_agglom_t = transposing(s_10_Archaea_agglom)
@@ -232,9 +220,12 @@ s_10_Fungi_agglom_t = transposing(s_10_Fungi_agglom)
 s_20_Fungi_agglom_t = transposing(s_20_Fungi_agglom)
 ```
 
-Making multiple merges, we'll merge the archaea, bacteria and fungi, and make 1 large OTU with all 3
+In order to understand how diversity differs among microbe type, we will agglomerate the OTUs from each depth. In addition, we'll make an "all" table with all three microbe types at both depths. 
+
+- We will also check the unique number of phylogenies, and compare with the above values. 
 
 ```{r}
+# Row binding both 
 arc = rbind(s_10_Archaea_agglom_t, s_20_Archaea_agglom_t,fill=TRUE)
 # checking unique number, we are expecting 19
 ncol(arc) -1
@@ -250,14 +241,9 @@ ncol(fun) -1
 # Merging all together
 all = list(arc,bac,fun ) %>% 
   reduce(full_join, by = "Phylogeny")
-
-
 ```
 
-
-
-
-Addinng column for depth with a function
+Adding column for depth with a function
 
 ```{r}
 add_depth <- function(df) {
@@ -270,8 +256,7 @@ add_depth <- function(df) {
 }
 ```
 
-
-Calling add_depth function
+Calling add_depth function for the agglomerated OTUs
 
 ```{r}
 arc = add_depth(arc)
@@ -281,45 +266,48 @@ fun = add_depth(fun)
 all = add_depth(all)
 ```
 
-
-making the df to hold info
+In order for us to compare features with beta diversity, we'll create a "df" dataframe which we will merge with the environmental data. We'll pull from the bacteria dataframe
 
 ```{r}
 df = bac[, c("Phylogeny", "depth")]
 ```
 
-
-Adding the environment table--> make column that matches depth10_39198 and merge
+We are pulling the environmental data and making each site match the format used in the OTU tables
 
 ```{r}
+# Loading in the environmental data
 en = read.csv("../Data/en.csv")
 
+# Using dplyr and an ifelse, baseed on the depth, we'll paste depth and site ID
 en = en %>% 
   mutate(Phylogeny = ifelse(grepl("010cm", Depth), paste0('depth10_',Sample), paste0('depth20_',Sample))) 
 ```
 
+Finally merging the df created with the OTU tables and the environmental table. Now we have a "describe" dataframe which holds all the soil composition data. 
+
 ```{r}
+# We merged on the column, "Phylogeny" which is the sample ID
 describe = merge(df, en, by = 'Phylogeny')
 ```
 
-
-
-Making the row names, the sample names so we don't lose them
-
+When conducting our diversity analysis, we will use the Sample IDs (in the Phylogeny column) as the identifier. Therefore, we will convert this column into the row names, instead of the index. 
 
 ```{r}
+# Input: Dataframe
 rowname <- function(df) {
-  
+  # We'll use dplyr to remove the current rownames and replac with the Phylogenny column
   df = df %>% 
   remove_rownames %>% 
   column_to_rownames(var="Phylogeny")
   
+  # Returns the dataframe
   return (df)
 
 }
 ```
 
-Calling rowname
+Calling rowname function for the agglomerated OTUs
+
 ```{r}
 arc = rowname(arc)
 bac = rowname(bac)
@@ -328,46 +316,22 @@ fun = rowname(fun)
 all = rowname(all)
 ```
 
-
-skipp - Conversion to binary
-
-```{r}
-# need to drop the last column!!!!!
-bac_bin<-subset(bac, select = -depth)
-bac_bin[bac_bin>0]<-1
-```
-
-skipp -Calculating the pairwise distance of this binary matrix
+Upon merging, all rows, not found, recieve a NA by default. The vegdist function we will eventually use, has difficulties processing NAs, therefore we will convert these cells into 0s with the custom function, nonan.
 
 ```{r}
-bac_bin_dist<-dist(bac_bin,method='binary')
-```
-
-skipp -
-```{r}
-OTU_tree<-nj(bac_bin_dist)
-
-ggtree(OTU_tree,layout="rectangular")%<+% 
-  df + 
-  geom_tiplab(aes(colour=depth))
-```
-
-HERE... Convert NA values to 0s
-
-Removing and converting NA into 0s
-
-```{r}
+# Input: dataframe
 nonan <- function(df) {
-  
+  # Uses dplyr
 df = df %>%
+  # For all numeric columns (ie. those with units), convert NAs into 0s
   mutate(across(where(is.numeric), ~ ifelse(is.na(.), 0, .)))
-  
+  # Return the dataframe
   return (df)
 
 }
 ```
 
-Calling nonnan function
+Calling nonnan function for all the agglomerated OTU tables
 
 ```{r}
 arc_nonan = nonan(arc)
@@ -377,20 +341,24 @@ fun_nonan = nonan(fun)
 all_nonan = nonan(all)
 ```
 
-Calculating Bray-Curtis
+We are interested in assessing beta-diversity or the measurement of diversity when comparing communities. We will use the vegdist function to calculate Bray-Curtis and use the nj function to create Neighbour-Joining trees. This will be efficiently calculated using the custom function, OTU_bray.
 
 
 ```{r}
+# Input: Dataframe
 OTU_bray <- function(df) {
-
+  
+  # Calculating Bray-Curtis using ONLY the microbes (we subset the dataframe to drop depth)
   OTU_dist<- vegdist(subset(df, select = -depth),method="bray",binary=F) 
+  # We apply the NJ function
   OTU_tree2<-nj(OTU_dist)
   
+  # We return a two item list: the Bray-Curtis distances and the tree
    return(list(OTU_dist,OTU_tree2))
 }
 ```
 
-Calling OTU_bray function
+Calling OTU_bray function for all the agglomerated OTU tables. We will also subset the OTU tables by depth, as we hypothesize depth is heavily influential to microbial communities, and the calculation for "differences" will be different via subsetting. 
 
 ```{r}
 arc_nonan_bray = OTU_bray(arc_nonan)
@@ -412,20 +380,21 @@ all_nonan_bray_depth20 = OTU_bray(all_nonan[all_nonan$depth ==20,])
 
 Could make this a loop... across diff features ** ONly did it for arc_nonan_bray, repeat for other two df...
 
+Using the above, we will assess clustering visually using the tree calculated above (the 2nd object in the list from OTU_bray) We will do this efficiently by creating a list of the categorical values (ie. related to destructive forces) and continuous values (ie. mostly soil composition measurements)  then colouring each tip. 
+
 ```{r}
-# that are factors
+# Categorical values
 features = c('depth', 'No.Fires', 'Clearcut', 'Salvage')
 
+# Creating a tree using each feature
 for (i in features) {
   print(ggtree(bac_nonan_bray_depth20[[2]]) %<+% 
   describe + 
   geom_tippoint(aes(color=as.factor(get(i)) ))+
   guides(color=guide_legend(title=i)))
-
-
 }
 
-# Truee scalars
+# Continuous features
 cont = c('TSD', 'Ammonium.Nitrogen', 'Nitrate.Nitrogen', 'Phosphorus.Colwell', 'Potassium.Colwell', 'Organic.Carbon', 'DTPA.Copper', 'DTPA.Iron','DTPA.Manganese',  'Exc.Magnesium','Slope', 'Elevation', 'pH.CaCl2.')
 
 for (i in cont) {
@@ -435,24 +404,31 @@ for (i in cont) {
   guides(color=guide_legend(title=i)))
 
 }
-
 ```
 
+From this:
+- Few of these features createdistinct branches
+- Few sites who underwent salvage cutting
 
-Checking if row names match with regards to order
+
+Next, we will prepare the NMDS cluters, however we want to keep the unique sample IDs. For simplicity, we'll check if we can use only one of the OTU tables, by checking if the order of the Phylogeny column is the same. 
 
 ```{r}
+# The identical function checks to see if all the values and their order match. We will try this on all the relevant combinations. 
 identical(row.names(arc), row.names(bac) )
 identical(row.names(arc), row.names(fun) )
 identical(row.names(arc), row.names(all) )
 ```
 
+Since all the values are true, we will only use the rownames from the arc dataframe.
 
-Calculating NMDS
-Generalizing,, ,beccause all the row names match in order, we can pick one to use for propogating row names
+Calculating NMDS\
+We are interested in studying how the microbial communities cluster, therefore we will apply non-metric multidimensional scaling (NMDS) which reduces the number of dimensions. We will apply this to all our OTU tables using the custom function, NMDSdat_make. We played around with the number of runs (trymax) in order to reach a solution for each table. 
 
 ```{r}
+# Input: Dataframe and the dataframe we'll use for rownames (arc)
 NMDSdat_make <- function(df, rowwing) {
+  # We'll set a seed to allow for reproducibility
   set.seed(13)
   
   # At 20 runs, fails to converge, 
@@ -460,18 +436,20 @@ NMDSdat_make <- function(df, rowwing) {
   # All fails to converge with 100 runs, so we'll increase to 200
   #NMDSdat<-metaMDS(df,k=2, trymax = 100) # k = 2 dimensions
   
+  # We found at 500 runs, all the tables reach a solution
   NMDSdat<-metaMDS(df,k=2, trymax = 500) # k = 2 dimensions
 
+  # We create a dataframe to hold all the NMDS values
   PDat<-data.frame(NMDS1=NMDSdat$points[,1],
                  NMDS2=NMDSdat$points[,2],
                  Phylogeny=row.names(rowwing))
+  # Return the PDat dataframe
 return(PDat)
 }
-
 ```
 
 
-Calling NMDSdat_make
+Calling NMDSdat_make for all the agglomerated OTU tables
 
 ```{r}
 NMDSdat_arc = NMDSdat_make(arc_nonan_bray[[1]], arc)
@@ -492,8 +470,7 @@ NMDSdat_all_depth10 = NMDSdat_make(all_nonan_bray_depth10[[1]], arc[1:80,])
 NMDSdat_all_depth20 = NMDSdat_make(all_nonan_bray_depth20[[1]], arc[81:160,])
 ```
 
-
-We cann merge the NMDSdat dataframees with the describe df
+In order to aadd soil composition data, we will merge the NMDS data with the "describe" dataframe, based on the Sample ID. 
 
 ```{r}
 NMDSdat_arc = merge(NMDSdat_arc, describe, by = 'Phylogeny')
@@ -509,31 +486,27 @@ NMDSdat_all_depth10 = merge(NMDSdat_all_depth10, describe, by = 'Phylogeny')
 NMDSdat_all_depth20 = merge(NMDSdat_all_depth20, describe, by = 'Phylogeny')
 ```
 
-Making a loop dissecting categorical features for microbial communities
+Similar to the above, we made a loop to dissect and cluster by categorical features, we'll apply this to all the OTU tables with the custom function, viz_cats. 
 
 ```{r}
 features = c('depth', 'No.Fires', 'Clearcut', 'Salvage')
 
-
+# Input: dataframe
 viz_cats <- function(df) {
   
+  # Looping through the features list
 for (i in features) {
+  # Make a clustering plot each feature
   print(qplot(x=NMDS1,y=NMDS2,color=as.factor(get(i)), alpha= I(0.6), data= df)+
   stat_ellipse() + 
   theme_bw()+
    guides(color=guide_legend(title=i))+
     ggtitle(deparse(substitute(df))))
-
-
 }
 }
-
-
-
-
 ```
 
-Running viz_cats for all the NMDS dfs
+Calling viz_cats for all NMDS dataframes. 
 
 ```{r}
 viz_cats(NMDSdat_arc)
@@ -549,19 +522,20 @@ viz_cats(NMDSdat_all_depth20)
 ```
 
 From the above, we determined:
-- Depth 10 vs 20 can make a big difference when comparing communities, especially bacterial ocmmunities
---> Therefore we'll focus on the separated Bray-Curtis'
+- Depths 0-10cm versus 20-30cm, makes a big difference when comparing clustering (This is in part our rational for separating Bray-Curtis calculations by depth). 
+  - This trend is especially obvious when observing bacterial communities
+    - We will therefore focus on these NMDS dataframes
+  - This trend seems to correlate with the amount of organic carbon (not shown)
+- We additionally noticed, among both depths, Clearcut 0 and 1 (no vs yes) has some distinct clustering
+- We found the number of fires does not result in unique clustering
 
-  For Depth 10 and 20
-  - We see Clearcut 0 vs 1 overlaps however there is distinct clustering
-  
-We'll look at the continuous variables for these two to determine if their clustering is linked to a continuous soil indicator
+We'll repeat the above with continuous variables to determine if clustering is linked to a soil health indicator. 
 
 ```{r}
-
+# List of continuous variables
 cont = c('Soil_fertility','TSD', 'Ammonium.Nitrogen', 'Nitrate.Nitrogen', 'Phosphorus.Colwell', 'Potassium.Colwell', 'Organic.Carbon', 'DTPA.Copper', 'DTPA.Iron','DTPA.Manganese',  'Exc.Magnesium','Slope', 'Elevation', 'pH.CaCl2.')
 
-
+# Same function, but with this list (no as.factor function required)
 viz_cont <- function(df) {
   
 for (i in cont) {
@@ -570,40 +544,74 @@ for (i in cont) {
   labs(color=i)+
     ggtitle(deparse(substitute(df)))+
   theme_bw())
-
-
 }
 }
-
 ```
+
+Calling viz_cont for the two NMDS dataframes of interest. 
 
 ```{r}
 viz_cont(NMDSdat_bac_depth10)
 viz_cont(NMDSdat_bac_depth20)
 ```
 
-From above, we can see
-- pH seems to help explain the difference among clearcut type--> for both depths
+From above, we can see:
+- High vs low pH seems to correlate with the distinct clusters from Clearcutting.
+  - Additionally, this effect is more present among 0-10cm depth 
+- Nitrogen potentially clusters distinctly, but only loosely
 
-Making final figures--> We'll need to add legend back...
+
+As we believe pH is related to Clearcutting, we will refine our final figures for this finding. 
 
 ```{r}
-a= ggplot(data = NMDSdat_bac_depth10, aes(NMDS1, NMDS2 )) + 
-  geom_point(aes(color=pH.CaCl2., shape=as.factor(Clearcut), size=2, alpha=I(0.7) )) +
-  xlim(c(-0.4,0.3))+
+# At depth 0-10cm
+
+a=  ggplot(data = NMDSdat_bac_depth10, aes(NMDS1, NMDS2 )) + 
+  geom_point(aes(color=pH.CaCl2., shape=as.factor(Clearcut), size=2, alpha=I(0.7)  )) +
+          stat_ellipse(aes(group=as.factor(Clearcut))) +
+  xlim(c(-0.4,0.35))+
   ylim(c(-0.25,0.2))+
   theme_bw()+
-  theme(legend.position="none")
+  theme(legend.position="none", text = element_text(size=20))+
+  # Customize a colour gradient, similar to a litmus test
+    scale_colour_gradient(
+  low = "#e32636",
+  high = "#5d8aa8")+
+  # Adding annotations for clearcut/ not clear cut and depth
+  annotate("text", x = -0.15, y = -0.15, label = "Clearcut", size=5)+
+annotate("text", x = 0.3, y = -0.1, label = "No Clearcut", size=5)+
+  annotate("text", x = 0.2, y = 0.2, label = "0-10cm depth", fontface = "bold", size=7)
 
+# Repeat for 20-30cm depth
 b=ggplot(data = NMDSdat_bac_depth20, aes(NMDS1, NMDS2 )) + 
-  geom_point(aes(color=pH.CaCl2., shape=as.factor(Clearcut), size=2, alpha=I(0.7) )) +
-  xlim(c(-0.4,0.3))+
+  geom_point(aes(color=pH.CaCl2., shape=as.factor(Clearcut), size=4, alpha=I(0.7) )) +
+            stat_ellipse(aes(group=as.factor(Clearcut))) +
+  xlim(c(-0.4,0.35))+
   ylim(c(-0.25,0.2))+
   theme_bw()+
-  theme(legend.position="none")
-
-plot_grid(a, b, labels = "AUTO", align='vh',vjust=1, scale = 1)
+      scale_colour_gradient(
+  low = "#e32636",
+  high = "#5d8aa8")+
+    labs(shape="Clearcut", colour="pH")+
+    scale_shape_discrete(labels = c("No", "Yes"))+
+  scale_size(guide = 'none')+
+annotate("text", x = 0.2, y = -0.1, label = "Clearcut", size=5)+
+annotate("text", x = 0.2, y = 0.1, label = "No Clearcut", size=5)+
+    annotate("text", x = 0.2, y = 0.2, label = "20-30cm depth", fontface = "bold", size=7)+
+  theme(legend.position="bottom",text = element_text(size=20))
 ```
 
+Making subplots for each depth
 
+```{r}
+c = plot_grid(a, b, nrow = 2,labels = "AUTO",   rel_heights = c(4,5))
+
+# Addding a caption
+ggdraw(add_sub(c, size =20,
+               'Figure 4. Non-metric multidimensional scaling (NMDS) ordination plot \n depicting clusters and shape which distinguishes \n sites which have undergone clearcutting. \n Color gradient represents pH measured in CaCl2. \n (A) 0-10cm depth samples. (B) 20-30cm depth samples')) 
+
+# Saving the final figure as a .png
+ggsave("../Question 1/fig4.png", width =24, height = 40, units = "cm", limitsize = FALSE)
+
+```
 
