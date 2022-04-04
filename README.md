@@ -32,7 +32,7 @@ Nadejda and Joel will be investigating subquestion A. They will be created a box
 
  
 
-Lauryn and Logan will be investigating subquestion B. They will create a series of boxplots to compare the number of disruptive events with levels of each nutrient ( nitrogen, phosphorous and potassium.) Then they will compare the soil compositions using soil profiles from the International Soil Reference and Information Centre (ISRIC) 
+Lauryn and Logan will be investigating subquestion B. They will create a series of boxplots to compare the number of disruptive events with levels of each nutrient ( nitrogen, phosphorous and potassium.)
 
  
 
