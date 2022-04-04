@@ -43,6 +43,13 @@ Diagram Outlining our Workflow:
 
 _____
 
+Predicted results:
+
+![graph1](https://user-images.githubusercontent.com/94632840/161539174-5d468364-1da0-4d36-a416-3593c5702783.png)
+![graph2](https://user-images.githubusercontent.com/94632840/161539198-d42e1f58-ca70-4c60-be50-7147c078d238.png)
+![graph3](https://user-images.githubusercontent.com/94632840/161539206-dc7ddb82-b396-418f-8a8b-f54b25accb33.png)
+______
+
 In order to run this code and observe our report, use ./Soil-Mates/Soil-Mates.Rmd
 
 In order to view final figures, please see .png stored in ./Soil-Mates/Question 1 and ./Soil-Mates/Question 2
