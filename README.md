@@ -44,11 +44,13 @@ Diagram Outlining our Workflow:
 _____
 
 Predicted results:
+
 ![277245470_665418907845707_8006956865598330293_n](https://user-images.githubusercontent.com/68873262/161539902-38278e83-8d4c-48b1-b3eb-852e809dc36e.jpg)
 
-![graph1](https://user-images.githubusercontent.com/94632840/161539174-5d468364-1da0-4d36-a416-3593c5702783.png)
-![graph2](https://user-images.githubusercontent.com/94632840/161539198-d42e1f58-ca70-4c60-be50-7147c078d238.png)
-![graph3](https://user-images.githubusercontent.com/94632840/161539206-dc7ddb82-b396-418f-8a8b-f54b25accb33.png)
+![275391977_3177582792557608_8949299353905118334_n](https://user-images.githubusercontent.com/68873262/161540216-26f7cdfd-f772-4cbe-a2c5-229d55359e51.jpg)
+
+![277116110_512435110460647_1787797503133910810_n](https://user-images.githubusercontent.com/68873262/161540227-d1ea2888-5395-4ac2-899d-2ef689d041b3.jpg)
+
 ______
 
 In order to run this code and observe our report, use ./Soil-Mates/Soil-Mates.Rmd
