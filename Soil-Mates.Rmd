@@ -176,7 +176,7 @@ theme_boxplot_one <- function (base_size =12, base_family = ""){
 }
 clearcutpal <- c("#7f4f24", "#718355")
 salvagepal <- c("#e9972d", "#15616d")
-fullpal <- c(clearcutpal, salvagepal)
+fullpal <- c(clearcutpal, salvagepal, "#732626", "#CB8282", "#BA82CB", "#82CBAA", "#C3CB82") 
 ```
 
 #### Plot of diversity by depth
@@ -319,7 +319,8 @@ QP6<- ggplot(EnM, aes(x=reorder(Disturbance_History,-TSD), y=Div)) +
    geom_line(data = EnM_mean2, 
             mapping = aes(x = Disturbance_History, y = average, group=1)) + 
   theme_boxplot_one() +
-  theme(legend.position = "none", axis.text.x = element_text(angle = 15, vjust = 1, hjust=1))
+  theme(legend.position = "none", axis.text.x = element_text(angle = 15, vjust = 1, hjust=1)) +
+  scale_fill_manual(values = fullpal)
 QP6
 ```
 
