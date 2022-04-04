@@ -18,8 +18,6 @@ Our dataset:
 
 We are looking to investigate the research question of what is the impact of destructive forces (both fire and logging) on the impact of potential measures of soil health? We will be doing this using three subquestions: 
 
- 
-
 A) of Are destructive forces associated with decreasing microbial diversity? 
 
 B) Are different soil chemical compositions associating with destructive forces? 
@@ -28,15 +26,14 @@ C) Are different soil chemical compositions associated with decreasing microbial
 
  
 
-Nadejda and Joel will be investigating subquestion A. They will be created a boxplot using R’s ggplot package to compare alpha and beta diversity at each site. They will be grouping by destructive force to see if there is a relationship between the destructive force and the diversity. Next, they will calculate beta diversity using Bray-Curtis's dissimilarity. They will visualize and analyze if sites with fires, salvage logging and clearcut logging cluster and separate well using Principal Component Analysis 
-
+Joel will be investigating subquestion A. He will create boxplots using R’s ggplot package to compare alpha at each site. They will group by destructive force to see if there is a relationship between the destructive force and diversity.
  
 
-Lauryn and Logan will be investigating subquestion B. They will create a series of boxplots to compare the number of disruptive events with levels of each nutrient (nitrogen, phosphorous and potassium).
+Lauryn and Logan will be investigating subquestion B. They will create a series of boxplots to compare the number of disruptive events with levels of each nutrient.
+
+Nadejda will answer subquestion C. By calculating beta diversity using Bray-Curtis's dissimilarity, she will visualize and analyze if sites with fires, salvage logging and clearcut logging cluster and separate well using Non-metric multidimensional scaling (NMDS) ordinations. Additionally, she will attempt to find if a soil health indicator is associated with these clusters. 
 
  
-
-Together all members of Soil mates will answer subquestion C by testing the correlation between alpha diversity and each nutrient quantified. 
 
 ____
 
@@ -46,7 +43,12 @@ Diagram Outlining our Workflow:
 
 _____
 
- 
+In order to run this code and observe our report, use ./Soil-Mates/Soil-Mates.Rmd
+
+In order to view final figures, please see .png stored in ./Soil-Mates/Question 1 and ./Soil-Mates/Question 2
+
+The data we used is stored in the Data folder. 
 
 About the dataset we are using: 
+
 Our dataset is from soil samples taken in the Victorian Central Highlands of southeastern Australia. These soil samples were taken at 0-10cm and 20-30cm depths at 80 sites with differing disturbance histories. These histories are comprised of five forest fire-only sites, forest fire sites that were clear cut years later, and a forest fire sites that were salvaged logged directly following a fire. The data includes bacterial, archaeal, and fungal microbial compositions derived from 16S rRNA sequencing. Additionally, scientists quantified ammonium, nitrate, phosphorus, potassium, organic carbon, copper, iron, manganese, and magnesium to determine the chemical makeup of the soil samples. The dataset contains tables of operational taxonomic units (OTUs); therefore we will consider the data as pre-processed. 
