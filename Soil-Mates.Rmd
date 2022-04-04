@@ -329,6 +329,4 @@ PLOT21<-grid.arrange(QP1, PlotB, QP6, ncol=1, nrow=3, left = "Shannon's Diversit
 ggsave( "Question1Plots.pdf", plot=PLOT21, width =40, height = 40, units = "cm")
 ```
 
-       
-
-
+      
