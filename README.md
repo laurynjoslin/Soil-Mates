@@ -38,6 +38,15 @@ Lauryn and Logan will be investigating subquestion B. They will create a series 
 
 Together all members of Soil mates will answer subquestion C by testing the correlation between alpha diversity and each nutrient quantified. 
 
+____
+
+Flowchart:
+
+<img width="605" alt="flowchart" src="https://user-images.githubusercontent.com/94632840/161470808-242a9b8d-27df-4858-9494-206a49694a49.png">
+
+_____
+
  
 
-About the dataset we are using: Our dataset is from soil samples taken in the Victorian Central Highlands of southeastern Australia. These soil samples were taken at 0-10cm and 20-30cm depths at 80 sites with differing disturbance histories. These histories are comprised of five forest fire-only sites, forest fire sites that were clear cut years later, and a forest fire sites that were salvaged logged directly following a fire. The data includes bacterial, archaeal, and fungal microbial compositions derived from 16S rRNA sequencing. Additionally, scientists quantified ammonium, nitrate, phosphorus, potassium, organic carbon, copper, iron, manganese, and magnesium to determine the chemical makeup of the soil samples. The dataset contains tables of operational taxonomic units (OTUs); therefore we will consider the data as pre-processed. 
+About the dataset we are using: 
+Our dataset is from soil samples taken in the Victorian Central Highlands of southeastern Australia. These soil samples were taken at 0-10cm and 20-30cm depths at 80 sites with differing disturbance histories. These histories are comprised of five forest fire-only sites, forest fire sites that were clear cut years later, and a forest fire sites that were salvaged logged directly following a fire. The data includes bacterial, archaeal, and fungal microbial compositions derived from 16S rRNA sequencing. Additionally, scientists quantified ammonium, nitrate, phosphorus, potassium, organic carbon, copper, iron, manganese, and magnesium to determine the chemical makeup of the soil samples. The dataset contains tables of operational taxonomic units (OTUs); therefore we will consider the data as pre-processed. 
