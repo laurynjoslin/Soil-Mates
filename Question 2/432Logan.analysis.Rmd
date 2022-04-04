@@ -150,20 +150,21 @@ theme_boxplot_one <- function (base_size =12, base_family = ""){
 
 ```{r}
 a <- ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen, fill = clearcut), alpha=0.25)+
+  geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen, fill = clearcut), outlier.shape = NA)+
   geom_jitter(aes(x = no_fires, y = Nitrate.Nitrogen, fill = clearcut), width=0.1, shape=21, color="black")+
   scale_fill_manual(labels = c('No','Yes'), values = clearcutpal)+
   theme_boxplot_one()+
   scale_x_discrete(name = "\nNumber of forest fires")+
   scale_y_continuous(name = "Nitrate form of Nitrogen (ppm)\n")+
-  labs(fill = "Was the site 
+  labs(fill = "Was the sitce 
 clear cut?")
 a
 ```
 
 ```{r}
 b <- ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = Potassium.Colwell, fill = clearcut))+
+  geom_boxplot(aes(x = no_fires, y = Potassium.Colwell, fill = clearcut),outlier.shape = NA)+
+  geom_jitter(aes(x = no_fires,y = Potassium.Colwell, fill = clearcut), width=0.1, shape=21, color="black")+
   scale_fill_manual(labels = c('No','Yes'), values = clearcutpal)+
   theme_boxplot_one()+
   scale_x_discrete(name = "\nNumber of forest fires")+
@@ -176,7 +177,8 @@ b
 
 ```{r}
 c <- ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = log10(DTPA.Iron), fill = clearcut))+
+  geom_boxplot(aes(x = no_fires, y = log10(DTPA.Iron), fill = clearcut), outlier.shape = NA)+
+   geom_jitter(aes(x = no_fires, y = log10(DTPA.Iron)), width=0.1, shape=21, color="black")+
   scale_fill_manual(labels = c('No','Yes'), values = clearcutpal)+
   theme_boxplot_one()+
   scale_x_discrete(name = "\nNumber of forest fires")+
@@ -185,10 +187,11 @@ c <- ggplot(en)+
 clear cut?")
 c
 ```
-
+ 
 ```{r}
 d <- ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = Organic.Carbon, fill = clearcut))+
+  geom_boxplot(aes(x = no_fires, y = Organic.Carbon, fill = clearcut), outlier.shape = NA)+
+  geom_jitter(aes(x = no_fires, y = Organic.Carbon, fill = clearcut), width=0.1, shape=21, color="black")+
   scale_fill_manual(labels = c('No','Yes'), values = clearcutpal)+
   theme_boxplot_one()+
   scale_x_discrete(name = "\nNumber of forest fires")+
@@ -202,7 +205,8 @@ d
 
 ```{r}
 e <- ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = Organic.Carbon, fill = Salvage))+
+  geom_boxplot(aes(x = no_fires, y = Organic.Carbon, fill = Salvage), outlier.shape = NA)+
+  geom_jitter(aes(x = no_fires, y = Organic.Carbon, fill = Salvage), width=0.1, shape=21, color="black")+
   scale_fill_manual(labels = c('No','Yes'), values = salvagepal)+
   theme_boxplot_one()+
   scale_x_discrete(name = "\nNumber of forest fires")+
@@ -214,7 +218,8 @@ e
 
 ```{r}
 f <- ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = log10(DTPA.Iron), fill = Salvage))+
+  geom_boxplot(aes(x = no_fires, y = log10(DTPA.Iron), fill = Salvage), outlier.shape = NA)+
+  geom_jitter(aes(x = no_fires, y = log10(DTPA.Iron), fill = Salvage),width=0.1, shape=21, color="black")+
   scale_fill_manual(labels = c('No','Yes'), values = salvagepal)+
   theme_boxplot_one()+
   scale_x_discrete(name = "\nNumber of forest fires")+
@@ -226,7 +231,8 @@ f
 
 ```{r}
 g <- ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = Potassium.Colwell, fill = Salvage))+
+  geom_boxplot(aes(x = no_fires, y = Potassium.Colwell, fill = Salvage), outlier.shape = NA)+
+  geom_jitter(aes(x = no_fires, y = Potassium.Colwell, fill = Salvage), width=0.1, shape=21, color="black")+
   scale_fill_manual(labels = c('No','Yes'), values = salvagepal)+
   theme_boxplot_one()+
   scale_x_discrete(name = "\nNumber of forest fires")+
@@ -236,10 +242,9 @@ salvage logged?")
 g
 ```
 
-## ADDING geom_jitter to see raw data on boxplots
 ```{r}
 h <- ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen, fill = Salvage), alpha=0.25)+
+  geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen, fill = Salvage),outlier.shape = NA)+
   geom_jitter(aes(x = no_fires, y = Nitrate.Nitrogen, fill = Salvage), width=0.1, shape=21, color="black")+
   scale_fill_manual(labels = c('No','Yes'), values = salvagepal)+
   theme_boxplot_one()+
@@ -255,84 +260,80 @@ h
 
 ```{r}
 a <- ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen, fill = clearcut))+
+  geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen, fill = clearcut), outlier.shape = NA)+
+  geom_jitter(aes(x = no_fires, y = Nitrate.Nitrogen, fill = clearcut), width=0.1, shape=21, color="black")+
   scale_fill_manual(labels = c('No','Yes'), values = clearcutpal)+
   theme_boxplot_one()+
-  theme(axis.title.x = element_blank(), axis.text.x = element_blank())+
-  theme(legend.position = "none")+
   scale_x_discrete(name = "\nNumber of forest fires")+
   scale_y_continuous(name = "Nitrate form of Nitrogen (ppm)\n")+
   labs(fill = "Was the site 
 clear cut?")
 b <- ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = Potassium.Colwell, fill = clearcut))+
+  geom_boxplot(aes(x = no_fires, y = Potassium.Colwell, fill = clearcut),outlier.shape = NA)+
+  geom_jitter(aes(x = no_fires,y = Potassium.Colwell, fill = clearcut), width=0.1, shape=21, color="black")+
   scale_fill_manual(labels = c('No','Yes'), values = clearcutpal)+
   theme_boxplot_one()+
-  theme(axis.title.x = element_blank(), axis.text.x = element_blank())+
-  theme(legend.position = "none")+
   scale_x_discrete(name = "\nNumber of forest fires")+
   scale_y_continuous(name = "Potassium (ppm)\n")+
   labs(fill = "Was the site 
 clear cut?")
 c <- ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = log10(DTPA.Iron), fill = clearcut))+
+  geom_boxplot(aes(x = no_fires, y = log10(DTPA.Iron), fill = clearcut), outlier.shape = NA)+
+   geom_jitter(aes(x = no_fires, y = log10(DTPA.Iron)), width=0.1, shape=21, color="black")+
   scale_fill_manual(labels = c('No','Yes'), values = clearcutpal)+
   theme_boxplot_one()+
-  theme(axis.title.x = element_blank(), axis.text.x = element_blank())+
-  theme(legend.position = "none")+
   scale_x_discrete(name = "\nNumber of forest fires")+
   scale_y_continuous(name = expression(paste(log[10]," (Iron ppm)")))+
   labs(fill = "Was the site 
 clear cut?")
 d <- ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = Organic.Carbon, fill = clearcut))+
+  geom_boxplot(aes(x = no_fires, y = Organic.Carbon, fill = clearcut), outlier.shape = NA)+
+  geom_jitter(aes(x = no_fires, y = Organic.Carbon, fill = clearcut), width=0.1, shape=21, color="black")+
   scale_fill_manual(labels = c('No','Yes'), values = clearcutpal)+
   theme_boxplot_one()+
-  theme(legend.position = "none")+
   scale_x_discrete(name = "\nNumber of forest fires")+
   scale_y_continuous(name = "Organic Carbon (ppm)\n")+
   labs(fill = "Was the site 
 clear cut?")
 h <- ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen, fill = Salvage))+
+  geom_boxplot(aes(x = no_fires, y = Nitrate.Nitrogen, fill = Salvage),outlier.shape = NA)+
+  geom_jitter(aes(x = no_fires, y = Nitrate.Nitrogen, fill = Salvage), width=0.1, shape=21, color="black")+
   scale_fill_manual(labels = c('No','Yes'), values = salvagepal)+
   theme_boxplot_one()+
-  theme(axis.title.x = element_blank(), axis.text.x = element_blank())+
-  theme(legend.position = "none")+
   scale_x_discrete(name = "\nNumber of forest fires")+
   scale_y_continuous(name = "Nitrate form of Nitrogen (ppm)\n")+
   labs(fill = "Was the site 
 salvage logged?")
+
 g <- ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = Potassium.Colwell, fill = Salvage))+
+  geom_boxplot(aes(x = no_fires, y = Potassium.Colwell, fill = Salvage), outlier.shape = NA)+
+  geom_jitter(aes(x = no_fires, y = Potassium.Colwell, fill = Salvage), width=0.1, shape=21, color="black")+
   scale_fill_manual(labels = c('No','Yes'), values = salvagepal)+
   theme_boxplot_one()+
-  theme(axis.title.x = element_blank(), axis.text.x = element_blank())+
-  theme(legend.position = "none")+
   scale_x_discrete(name = "\nNumber of forest fires")+
   scale_y_continuous(name = "Potassium (ppm)\n")+
   labs(fill = "Was the site 
 salvage logged?")
 f <- ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = log10(DTPA.Iron), fill = Salvage))+
+  geom_boxplot(aes(x = no_fires, y = log10(DTPA.Iron), fill = Salvage), outlier.shape = NA)+
+  geom_jitter(aes(x = no_fires, y = log10(DTPA.Iron), fill = Salvage),width=0.1, shape=21, color="black")+
   scale_fill_manual(labels = c('No','Yes'), values = salvagepal)+
   theme_boxplot_one()+
-   theme(axis.title.x = element_blank(), axis.text.x = element_blank())+
-  theme(legend.position = "none")+
   scale_x_discrete(name = "\nNumber of forest fires")+
   scale_y_continuous(name = expression(paste(log[10]," (Iron ppm)")))+
   labs(fill = "Was the site 
 salvage logged?")
 e <- ggplot(en)+
-  geom_boxplot(aes(x = no_fires, y = Organic.Carbon, fill = Salvage))+
+  geom_boxplot(aes(x = no_fires, y = Organic.Carbon, fill = Salvage), outlier.shape = NA)+
+  geom_jitter(aes(x = no_fires, y = Organic.Carbon, fill = Salvage), width=0.1, shape=21, color="black")+
   scale_fill_manual(labels = c('No','Yes'), values = salvagepal)+
   theme_boxplot_one()+
-  theme(legend.position = "none")+
   scale_x_discrete(name = "\nNumber of forest fires")+
   scale_y_continuous(name = "Organic Carbon (ppm)\n")+
   labs(fill = "Was the site 
 salvage logged??")
 ```
+
 
 #Stacking
 
